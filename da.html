@@ -16,6 +16,12 @@
     .meal-btn { border: none; padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; background: transparent; color: #4b5563; }
     .meal-btn.active { background: #1f2937; color: #fff; font-weight: bold; }
 
+    /* 搜索栏组件 */
+    .search-container { position: relative; margin-bottom: 12px; }
+    .search-input { width: 100%; background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 10px 36px 10px 14px; font-size: 14px; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: border-color 0.2s; }
+    .search-input:focus { border-color: #2563eb; }
+    .clear-search-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: #e5e7eb; color: #4b5563; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
     /* 云端同步指示灯 */
     .sync-status { font-size: 11px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
     .status-left { display: flex; align-items: center; gap: 6px; }
@@ -41,6 +47,7 @@
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .table-name { font-size: 15px; font-weight: bold; }
     .table-cap { font-size: 11px; opacity: 0.85; }
+    .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
     .card-body { margin-top: 6px; }
     .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; }
@@ -95,6 +102,12 @@
     </div>
   </div>
 
+  <!-- 全局搜索栏 -->
+  <div class="search-container">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索客人姓名或电话号码..." oninput="onSearchInput()">
+    <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">✕</button>
+  </div>
+
   <!-- 云端同步状态 -->
   <div class="sync-status">
     <div class="status-left">
@@ -145,7 +158,7 @@
     '大饭堂-饭1', '知青包厢', '生产队包厢', '联队包厢', '合作社包厢', '人民公社包厢'
   ];
 
-  // 计算桌号建议人数的辅助函数
+  // 计算桌号建议人数辅助函数
   const getCap = (id) => largeTables.includes(id) ? '10人' : '6人左右';
 
   // 区域与台号全量配置
@@ -156,17 +169,11 @@
     },
     {
       name: '旧厅',
-      tables: Array.from({ length: 18 }, (_, i) => {
-        const id = `${i + 1}号`;
-        return { id, cap: getCap(id) };
-      })
+      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 1}号`, cap: getCap(`${i + 1}号`) }))
     },
     {
       name: '新厅',
-      tables: Array.from({ length: 18 }, (_, i) => {
-        const id = `${i + 19}号`;
-        return { id, cap: getCap(id) };
-      })
+      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 19}号`, cap: getCap(`${i + 19}号`) }))
     },
     {
       name: '包厢',
@@ -181,10 +188,7 @@
     },
     {
       name: '户外花园',
-      tables: Array.from({ length: 4 }, (_, i) => {
-        const id = `${i + 37}号`;
-        return { id, cap: getCap(id) };
-      })
+      tables: Array.from({ length: 4 }, (_, i) => ({ id: `${i + 37}号`, cap: getCap(`${i + 37}号`) }))
     }
   ];
 
@@ -264,6 +268,20 @@
     }
   }
 
+  // 搜索监听
+  function onSearchInput() {
+    const keyword = document.getElementById('searchInput').value.trim();
+    document.getElementById('clearSearchBtn').style.display = keyword ? 'flex' : 'none';
+    renderGrid();
+  }
+
+  // 清空搜索
+  function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('clearSearchBtn').style.display = 'none';
+    renderGrid();
+  }
+
   function switchMeal(meal) {
     currentMeal = meal;
     document.getElementById('btnLunch').classList.toggle('active', meal === 'lunch');
@@ -283,14 +301,72 @@
 
   function switchZone(idx) {
     currentZoneIndex = idx;
+    // 切换区域时自动清空搜索状态
+    if (document.getElementById('searchInput').value) {
+      clearSearch();
+      return;
+    }
     renderZones();
     renderGrid();
   }
 
   function renderGrid() {
     const grid = document.getElementById('tableGrid');
-    const tables = ZONES[currentZoneIndex].tables;
+    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
 
+    // 模式 A：搜索模式（跨全店所有区域查找）
+    if (keyword !== '') {
+      let matchedTables = [];
+
+      ZONES.forEach(zone => {
+        zone.tables.forEach(t => {
+          const rec = reservationMap[t.id] || { status: 'free' };
+          if (rec.status !== 'free') {
+            const guestMatch = rec.guest && rec.guest.toLowerCase().includes(keyword);
+            const phoneMatch = rec.phone && rec.phone.toLowerCase().includes(keyword);
+            if (guestMatch || phoneMatch) {
+              matchedTables.push({ ...t, zoneName: zone.name, rec });
+            }
+          }
+        });
+      });
+
+      if (matchedTables.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">
+            🔍 未搜索到包含“<b style="color:#1f2937">${keyword}</b>”的预订记录
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = matchedTables.map(item => {
+        const rec = item.rec;
+        let bodyHtml = '';
+        if (rec.status === 'reserved') {
+          bodyHtml = `<div class="guest-name">👤 ${rec.guest}</div><div class="res-time">⏰ ${rec.time}</div>`;
+        } else if (rec.status === 'occupied') {
+          bodyHtml = `<div class="status-tag">🔥 就餐中</div>`;
+        }
+
+        return `
+          <div class="table-card status-${rec.status}" onclick="openTableModal('${item.id}', '${item.cap}')">
+            <div class="card-header">
+              <div>
+                <span class="table-name">${item.id}</span>
+                <div><span class="search-zone-badge">${item.zoneName}</span></div>
+              </div>
+              <span class="table-cap">${item.cap}</span>
+            </div>
+            <div class="card-body">${bodyHtml}</div>
+          </div>
+        `;
+      }).join('');
+      return;
+    }
+
+    // 模式 B：常规按区域查看
+    const tables = ZONES[currentZoneIndex].tables;
     grid.innerHTML = tables.map(t => {
       const rec = reservationMap[t.id] || { status: 'free' };
       let bodyHtml = '';
