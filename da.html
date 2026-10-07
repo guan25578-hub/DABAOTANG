@@ -10,10 +10,12 @@
     .container { max-width: 650px; margin: 0 auto; }
 
     /* 顶部控制栏 */
-    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .date-picker { font-size: 15px; font-weight: bold; border: 1px solid #d1d5db; background: #f9fafb; padding: 6px 10px; border-radius: 8px; outline: none; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 14px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .date-group { display: flex; align-items: center; gap: 6px; }
+    .date-picker { font-size: 14px; font-weight: bold; border: 1px solid #d1d5db; background: #f9fafb; padding: 6px 8px; border-radius: 8px; outline: none; }
+    .weekday-tag { font-size: 13px; font-weight: bold; color: #2563eb; background: #eff6ff; padding: 4px 8px; border-radius: 6px; }
     .meal-toggle { display: flex; background: #e5e7eb; border-radius: 8px; padding: 3px; }
-    .meal-btn { border: none; padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; background: transparent; color: #4b5563; }
+    .meal-btn { border: none; padding: 6px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; background: transparent; color: #4b5563; }
     .meal-btn.active { background: #1f2937; color: #fff; font-weight: bold; }
 
     /* 全局搜索栏组件 */
@@ -42,12 +44,15 @@
 
     /* 桌态网格 */
     .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .table-card { min-height: 105px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
+    .table-card { min-height: 110px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
     .table-card:active { transform: scale(0.97); }
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .table-name { font-size: 15px; font-weight: bold; }
     .table-cap { font-size: 11px; opacity: 0.85; }
-    .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
+    .search-meta-badges { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 3px; }
+    .badge-item { font-size: 10px; padding: 1px 5px; border-radius: 4px; font-weight: normal; }
+    .badge-zone { background: #dbeafe; color: #1e40af; }
+    .badge-date { background: #fef3c7; color: #92400e; }
     .card-body { margin-top: 4px; }
     .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -94,9 +99,12 @@
 <body>
 
 <div class="container">
-  <!-- 顶部控制栏 -->
+  <!-- 顶部控制栏（增加星期几显示） -->
   <div class="top-bar">
-    <input type="date" id="datePicker" class="date-picker">
+    <div class="date-group">
+      <input type="date" id="datePicker" class="date-picker">
+      <span class="weekday-tag" id="weekdayDisplay">周一</span>
+    </div>
     <div class="meal-toggle">
       <button class="meal-btn active" id="btnLunch" onclick="switchMeal('lunch')">🌞 午市</button>
       <button class="meal-btn" id="btnDinner" onclick="switchMeal('dinner')">🌙 晚市</button>
@@ -105,7 +113,7 @@
 
   <!-- 全局搜索栏 -->
   <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索客人姓名或电话号码..." oninput="onSearchInput()">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 全局搜预订人姓名/电话..." oninput="onSearchInput()">
     <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">✕</button>
   </div>
 
@@ -151,7 +159,7 @@
   const SECRET_KEY = "$2a$10$hGE7gq9vMON78zjVzSkOP.2/jb0MfG9yk6mKkjxgdBjTK8cJiyLIu";
   const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-  // 定义所有大桌（可坐10人）的台号列表
+  // 定义所有大桌（可坐10人）列表
   const largeTables = [
     '③', '④', '⑦', '⑧',
     '13号', '14号', '16号', '17号',
@@ -159,10 +167,16 @@
     '大饭堂-饭1', '知青包厢', '生产队包厢', '联队包厢', '合作社包厢', '人民公社包厢'
   ];
 
-  // 计算桌号建议人数辅助函数
   const getCap = (id) => largeTables.includes(id) ? '10人' : '6人左右';
 
-  // 区域与台号全量配置
+  // 星期辅助计算函数
+  function getWeekdayText(dateStr) {
+    const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+    const d = new Date(dateStr + 'T00:00:00');
+    return days[d.getDay()];
+  }
+
+  // 区域全量配置
   const ZONES = [
     {
       name: '收银台旁边',
@@ -199,12 +213,15 @@
   let globalAllData = {}; 
   let reservationMap = {}; 
   let currentActiveTable = null;
-  let syncTimer = null; // 定时器变量
+  let syncTimer = null;
 
   window.onload = function() {
     document.getElementById('datePicker').value = selectedDate;
+    updateWeekdayDisplay();
+
     document.getElementById('datePicker').addEventListener('change', (e) => {
       selectedDate = e.target.value;
+      updateWeekdayDisplay();
       updateCurrentReservationMap();
       renderGrid();
     });
@@ -212,10 +229,10 @@
     renderZones();
     loadData();
 
-    // 开启自动同步（优化为 15 秒/次，节约流量）
+    // 开启 15 秒同步
     startSync();
 
-    // 监听切后台/锁屏：离开页面停止同步，切回页面立即刷新并恢复同步
+    // 锁屏/切后台暂停同步
     document.addEventListener("visibilitychange", function() {
       if (document.hidden) {
         stopSync();
@@ -226,10 +243,12 @@
     });
   };
 
+  function updateWeekdayDisplay() {
+    document.getElementById('weekdayDisplay').innerText = getWeekdayText(selectedDate);
+  }
+
   function startSync() {
-    if (!syncTimer) {
-      syncTimer = setInterval(loadData, 15000); // 15秒刷新一次
-    }
+    if (!syncTimer) syncTimer = setInterval(loadData, 15000);
   }
 
   function stopSync() {
@@ -246,7 +265,6 @@
     text.innerText = message;
   }
 
-  // 从云端读取数据
   async function loadData() {
     try {
       const res = await fetch(`${API_URL}/latest`, {
@@ -255,7 +273,7 @@
       if (res.ok) {
         const result = await res.json();
         globalAllData = result.record || {};
-        updateSyncStatus(true, "全店实时同步中 (每15秒刷新)");
+        updateSyncStatus(true, "全店实时同步中 (15s刷新)");
       } else {
         updateSyncStatus(false, "云端连接失败，请检查网络");
       }
@@ -272,10 +290,26 @@
     reservationMap = globalAllData[key] || {};
   }
 
-  // 保存更改到云端
+  // 自动清理 7 天前旧数据以保持轻量
+  function cleanExpiredData() {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7)).toISOString().split('T')[0];
+
+    Object.keys(globalAllData).forEach(key => {
+      if (key.startsWith('RES_')) {
+        const datePart = key.split('_')[1];
+        if (datePart && datePart < sevenDaysAgo) {
+          delete globalAllData[key];
+        }
+      }
+    });
+  }
+
   async function saveData() {
     const key = `RES_${selectedDate}_${currentMeal}`;
     globalAllData[key] = reservationMap;
+    
+    cleanExpiredData(); // 保存前清理过期历史数据
     renderGrid(); 
 
     try {
@@ -293,14 +327,12 @@
     }
   }
 
-  // 搜索监听
   function onSearchInput() {
     const keyword = document.getElementById('searchInput').value.trim();
     document.getElementById('clearSearchBtn').style.display = keyword ? 'flex' : 'none';
     renderGrid();
   }
 
-  // 清空搜索
   function clearSearch() {
     document.getElementById('searchInput').value = '';
     document.getElementById('clearSearchBtn').style.display = 'none';
@@ -334,7 +366,6 @@
     renderGrid();
   }
 
-  // 生成桌态卡片内容
   function getCardBodyHtml(rec) {
     if (rec.status === 'reserved') {
       let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
@@ -360,20 +391,36 @@
     const grid = document.getElementById('tableGrid');
     const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
 
-    // 搜索模式
+    // 搜索模式（显示全店、跨日期的搜索结果）
     if (keyword !== '') {
       let matchedTables = [];
 
-      ZONES.forEach(zone => {
-        zone.tables.forEach(t => {
-          const rec = reservationMap[t.id] || { status: 'free' };
-          if (rec.status !== 'free') {
-            const guestMatch = rec.guest && rec.guest.toLowerCase().includes(keyword);
-            const phoneMatch = rec.phone && rec.phone.toLowerCase().includes(keyword);
-            if (guestMatch || phoneMatch) {
-              matchedTables.push({ ...t, zoneName: zone.name, rec });
+      Object.keys(globalAllData).forEach(storeKey => {
+        if (!storeKey.startsWith('RES_')) return;
+        
+        const parts = storeKey.split('_');
+        const resDate = parts[1];
+        const resMeal = parts[2] === 'lunch' ? '午市' : '晚市';
+        const resMap = globalAllData[storeKey];
+
+        ZONES.forEach(zone => {
+          zone.tables.forEach(t => {
+            const rec = resMap[t.id];
+            if (rec && rec.status !== 'free') {
+              const guestMatch = rec.guest && rec.guest.toLowerCase().includes(keyword);
+              const phoneMatch = rec.phone && rec.phone.toLowerCase().includes(keyword);
+              if (guestMatch || phoneMatch) {
+                matchedTables.push({ 
+                  ...t, 
+                  zoneName: zone.name, 
+                  dateStr: resDate, 
+                  weekdayStr: getWeekdayText(resDate),
+                  mealStr: resMeal,
+                  rec 
+                });
+              }
             }
-          }
+          });
         });
       });
 
@@ -391,7 +438,10 @@
           <div class="card-header">
             <div>
               <span class="table-name">${item.id}</span>
-              <div><span class="search-zone-badge">${item.zoneName}</span></div>
+              <div class="search-meta-badges">
+                <span class="badge-item badge-zone">${item.zoneName}</span>
+                <span class="badge-item badge-date">${item.dateStr.substring(5)} ${item.weekdayStr}·${item.mealStr}</span>
+              </div>
             </div>
             <span class="table-cap">${item.cap}</span>
           </div>
