@@ -1,585 +1,316 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>饭店预订与桌态实时看板</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 12px; color: #1f2937; }
-    .container { max-width: 650px; margin: 0 auto; }
-
-    /* 顶部控制栏 */
-    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 14px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .date-group { display: flex; align-items: center; gap: 6px; }
-    .date-picker { font-size: 14px; font-weight: bold; border: 1px solid #d1d5db; background: #f9fafb; padding: 6px 8px; border-radius: 8px; outline: none; }
-    .weekday-tag { font-size: 13px; font-weight: bold; color: #2563eb; background: #eff6ff; padding: 4px 8px; border-radius: 6px; }
-    .meal-toggle { display: flex; background: #e5e7eb; border-radius: 8px; padding: 3px; }
-    .meal-btn { border: none; padding: 6px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; background: transparent; color: #4b5563; }
-    .meal-btn.active { background: #1f2937; color: #fff; font-weight: bold; }
-
-    /* 全局搜索栏组件 */
-    .search-container { position: relative; margin-bottom: 12px; }
-    .search-input { width: 100%; background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 10px 36px 10px 14px; font-size: 14px; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: border-color 0.2s; }
-    .search-input:focus { border-color: #2563eb; }
-    .clear-search-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: #e5e7eb; color: #4b5563; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-    /* 云端同步指示灯 */
-    .sync-status { font-size: 11px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
-    .status-left { display: flex; align-items: center; gap: 6px; }
-    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #9ca3af; display: inline-block; }
-    .sync-dot.online { background-color: #22c55e; }
-    .sync-dot.error { background-color: #ef4444; }
-    .bin-info { font-size: 10px; color: #9ca3af; }
-
-    /* 区域导航栏 */
-    .zone-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
-    .zone-tab { flex-shrink: 0; padding: 8px 16px; font-size: 14px; background: #fff; border-radius: 20px; color: #4b5563; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.03); white-space: nowrap; }
-    .zone-tab.active { background: #2563eb; color: #fff; font-weight: bold; }
-
-    /* 图例说明 */
-    .legend-bar { display: flex; justify-content: flex-end; gap: 15px; font-size: 12px; color: #6b7280; margin-bottom: 12px; }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
-
-    /* 桌态网格 */
-    .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .table-card { min-height: 110px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
-    .table-card:active { transform: scale(0.97); }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .table-name { font-size: 15px; font-weight: bold; }
-    .table-cap { font-size: 11px; opacity: 0.85; }
-    .search-meta-badges { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 3px; }
-    .badge-item { font-size: 10px; padding: 1px 5px; border-radius: 4px; font-weight: normal; }
-    .badge-zone { background: #dbeafe; color: #1e40af; }
-    .badge-date { background: #fef3c7; color: #92400e; }
-    .card-body { margin-top: 4px; }
-    .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .status-tag { font-size: 11px; opacity: 0.85; margin-top: 4px; font-weight: 500; }
-
-    /* 色彩规范 */
-    .status-free-bg { background-color: #22c55e; }
-    .status-free { background-color: #dcfce7; color: #15803d; border: 1.5px solid #86efac; }
-    .status-reserved-bg { background-color: #f59e0b; }
-    .status-reserved { background-color: #fef3c7; color: #b45309; border: 1.5px solid #fde047; }
-    .status-occupied-bg { background-color: #ef4444; }
-    .status-occupied { background-color: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
-
-    /* 弹窗样式 */
-    .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .modal-mask.hidden { display: none; }
-    .modal-card { width: 90%; max-width: 450px; background: #fff; border-radius: 16px; padding: 20px; max-height: 90vh; overflow-y: auto; }
-    .modal-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .close-btn { cursor: pointer; color: #9ca3af; font-size: 22px; padding: 0 5px; }
-
-    /* 表单与详情 */
-    .form-item { margin-bottom: 12px; }
-    .label { font-size: 13px; color: #374151; font-weight: 500; display: block; margin-bottom: 4px; }
-    .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
-    .textarea { height: 70px; resize: none; }
-    .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
-    .d-label { color: #6b7280; width: 90px; flex-shrink: 0; }
-    .d-value { color: #1f2937; flex-grow: 1; word-break: break-all; }
-    .d-value.phone a { color: #2563eb; font-weight: bold; text-decoration: underline; }
-    .d-value.highlight { color: #d97706; font-weight: 500; }
-    .d-value.warn { color: #dc2626; }
-    .occupied-badge { margin-bottom: 15px; padding: 8px 12px; background: #fee2e2; border-radius: 8px; color: #b91c1c; font-size: 13px; font-weight: bold; text-align: center; }
-
-    /* 按钮组 */
-    .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
-    .action-btn { width: 100%; border: none; border-radius: 8px; font-size: 14px; padding: 12px 0; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-    .action-btn:active { opacity: 0.8; }
-    .btn-primary { background: #2563eb; color: #fff; }
-    .btn-success { background: #16a34a; color: #fff; }
-    .btn-warning { background: #f59e0b; color: #fff; }
-    .btn-danger { background: #dc2626; color: #fff; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大煲汤餐厅在线预订系统</title>
+    <style>
+        :root {
+            --primary-color: #e67e22;
+            --primary-dark: #d35400;
+            --bg-color: #f9f9f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #ddd;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .container {
+            max-width: 650px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 8px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(230, 126, 34, 0.3);
+        }
+        button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            width: 100%;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: var(--primary-dark);
+        }
+        .status {
+            margin-top: 15px;
+            font-size: 14px;
+            text-align: center;
+            font-weight: 500;
+            min-height: 20px;
+        }
+        .success { color: #27ae60; }
+        .error { color: #c0392b; }
+        .loading { color: #2980b9; }
+        
+        /* 预订列表样式 */
+        .reservation-list {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 10px;
+            background: #fff;
+        }
+        .reservation-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+        .reservation-item:last-child {
+            border-bottom: none;
+        }
+        .reservation-item .res-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            color: #555;
+        }
+        .reservation-item .res-body {
+            margin-top: 4px;
+            color: #666;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
-  <!-- 顶部控制栏（增加星期几显示） -->
-  <div class="top-bar">
-    <div class="date-group">
-      <input type="date" id="datePicker" class="date-picker">
-      <span class="weekday-tag" id="weekdayDisplay">周一</span>
+    <h2>🥣 大煲汤餐厅在线预订系统</h2>
+    
+    <!-- 预订表单 -->
+    <div class="form-group">
+        <label>预订人姓名：</label>
+        <input type="text" id="name" placeholder="请输入您的称呼">
     </div>
-    <div class="meal-toggle">
-      <button class="meal-btn active" id="btnLunch" onclick="switchMeal('lunch')">🌞 午市</button>
-      <button class="meal-btn" id="btnDinner" onclick="switchMeal('dinner')">🌙 晚市</button>
+    
+    <div class="form-group">
+        <label>联系电话：</label>
+        <input type="tel" id="phone" placeholder="请输入您的手机号码">
     </div>
-  </div>
-
-  <!-- 全局搜索栏 -->
-  <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 全局搜预订人姓名/电话..." oninput="onSearchInput()">
-    <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">✕</button>
-  </div>
-
-  <!-- 云端同步指示灯 -->
-  <div class="sync-status">
-    <div class="status-left">
-      <span class="sync-dot" id="syncDot"></span>
-      <span id="syncText">正在连接云端看板...</span>
+    
+    <div class="form-group">
+        <label>就餐人数：</label>
+        <select id="guests">
+            <option value="1-2人 雅座">1-2人 雅座</option>
+            <option value="3-4人 中桌">3-4人 中桌</option>
+            <option value="5-8人 大桌">5-8人 大桌</option>
+            <option value="8人以上 包厢">8人以上 包厢</option>
+        </select>
     </div>
-    <span class="bin-info" id="binInfoDisplay">云端已就绪</span>
-  </div>
 
-  <!-- 区域切换 Tab -->
-  <div class="zone-bar" id="zoneBar"></div>
-
-  <!-- 状态图例 -->
-  <div class="legend-bar">
-    <div class="legend-item"><div class="dot status-free-bg"></div>空闲</div>
-    <div class="legend-item"><div class="dot status-reserved-bg"></div>已预留</div>
-    <div class="legend-item"><div class="dot status-occupied-bg"></div>就餐中</div>
-  </div>
-
-  <!-- 桌态网格 -->
-  <div class="table-grid" id="tableGrid"></div>
-</div>
-
-<!-- 详情与编辑弹窗 -->
-<div class="modal-mask hidden" id="modalMask">
-  <div class="modal-card">
-    <div class="modal-title">
-      <span id="modalTableTitle">桌台详情</span>
-      <span class="close-btn" onclick="closeModal()">✕</span>
+    <div class="form-group">
+        <label>就餐日期与时间：</label>
+        <input type="datetime-local" id="datetime">
     </div>
-    <div id="modalBody"></div>
-  </div>
+
+    <div class="form-group">
+        <label>备注说明（选填）：</label>
+        <textarea id="remark" rows="2" placeholder="如有忌口或特殊需求请留言"></textarea>
+    </div>
+
+    <button onclick="submitReservation()">立即提交预订并同步云端</button>
+    <div class="status" id="statusMsg"></div>
+
+    <!-- 云端数据展示区 -->
+    <div class="section-title">当前云端预订列表</div>
+    <button onclick="loadReservations()" style="background: #34495e; font-size: 14px; padding: 8px; margin-bottom: 10px;">刷新云端数据</button>
+    <div class="reservation-list" id="reservationList">
+        <div style="text-align: center; color: #888; padding: 20px;">点击上方按钮加载云端预订记录...</div>
+    </div>
 </div>
 
 <script>
-  /******************************************************************
-   * 云数据库配置
-   ******************************************************************/
-  const BIN_ID = "6ac62506ffd5d1605355a13d";
-  const SECRET_KEY = "$2a$10$hGE7gq9vMON78zjVzSkOP.2/jb0MfG9yk6mKkjxgdBjTK8cJiyLIu";
-  const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+    // GitHub 核心配置
+    const GITHUB_USER = "guan25578-hub";
+    const GITHUB_REPO = "DABAOTANG"; 
+    const GITHUB_TOKEN = "Ghp_jilTYArhDxCl5KxheQPSolzK96jmRr3OWARk";
+    const FILE_PATH = "reservations.json";
 
-  // 定义所有大桌（可坐10人）列表
-  const largeTables = [
-    '③', '④', '⑦', '⑧',
-    '13号', '14号', '16号', '17号',
-    '22号', '26号', '27号', '28号', '29号', '30号',
-    '大饭堂-饭1', '知青包厢', '生产队包厢', '联队包厢', '合作社包厢', '人民公社包厢'
-  ];
-
-  const getCap = (id) => largeTables.includes(id) ? '10人' : '6人左右';
-
-  // 星期辅助计算函数
-  function getWeekdayText(dateStr) {
-    const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    const d = new Date(dateStr + 'T00:00:00');
-    return days[d.getDay()];
-  }
-
-  // 区域全量配置
-  const ZONES = [
-    {
-      name: '收银台旁边',
-      tables: ['①','②','③','④','⑤','⑥','⑦','⑧'].map(id => ({ id, cap: getCap(id) }))
-    },
-    {
-      name: '旧厅',
-      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 1}号`, cap: getCap(`${i + 1}号`) }))
-    },
-    {
-      name: '新厅',
-      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 19}号`, cap: getCap(`${i + 19}号`) }))
-    },
-    {
-      name: '包厢',
-      tables: [
-        '大饭堂-饭1', '大饭堂-饭2', '大饭堂-饭3',
-        '知青包厢', '生产队包厢', '合作社包厢', '联队包厢', '人民公社包厢'
-      ].map(id => ({ id, cap: getCap(id) }))
-    },
-    {
-      name: '外棚',
-      tables: Array.from({ length: 8 }, (_, i) => ({ id: `外${i + 1}`, cap: getCap(`外${i + 1}`) }))
-    },
-    {
-      name: '户外花园',
-      tables: Array.from({ length: 4 }, (_, i) => ({ id: `${i + 37}号`, cap: getCap(`${i + 37}号`) }))
-    }
-  ];
-
-  let currentMeal = 'lunch';
-  let currentZoneIndex = 0;
-  let selectedDate = new Date().toISOString().split('T')[0];
-  let globalAllData = {}; 
-  let reservationMap = {}; 
-  let currentActiveTable = null;
-  let syncTimer = null;
-
-  window.onload = function() {
-    document.getElementById('datePicker').value = selectedDate;
-    updateWeekdayDisplay();
-
-    document.getElementById('datePicker').addEventListener('change', (e) => {
-      selectedDate = e.target.value;
-      updateWeekdayDisplay();
-      updateCurrentReservationMap();
-      renderGrid();
-    });
-
-    renderZones();
-    loadData();
-
-    // 开启 15 秒同步
-    startSync();
-
-    // 锁屏/切后台暂停同步
-    document.addEventListener("visibilitychange", function() {
-      if (document.hidden) {
-        stopSync();
-      } else {
-        loadData();
-        startSync();
-      }
-    });
-  };
-
-  function updateWeekdayDisplay() {
-    document.getElementById('weekdayDisplay').innerText = getWeekdayText(selectedDate);
-  }
-
-  function startSync() {
-    if (!syncTimer) syncTimer = setInterval(loadData, 15000);
-  }
-
-  function stopSync() {
-    if (syncTimer) {
-      clearInterval(syncTimer);
-      syncTimer = null;
-    }
-  }
-
-  function updateSyncStatus(isOnline, message) {
-    const dot = document.getElementById('syncDot');
-    const text = document.getElementById('syncText');
-    dot.className = 'sync-dot ' + (isOnline ? 'online' : 'error');
-    text.innerText = message;
-  }
-
-  async function loadData() {
-    try {
-      const res = await fetch(`${API_URL}/latest`, {
-        headers: { 'X-Master-Key': SECRET_KEY }
-      });
-      if (res.ok) {
-        const result = await res.json();
-        globalAllData = result.record || {};
-        updateSyncStatus(true, "全店实时同步中 (15s刷新)");
-      } else {
-        updateSyncStatus(false, "云端连接失败，请检查网络");
-      }
-    } catch (err) {
-      updateSyncStatus(false, "网络异常，无法连接云端");
-    }
-
-    updateCurrentReservationMap();
-    renderGrid();
-  }
-
-  function updateCurrentReservationMap() {
-    const key = `RES_${selectedDate}_${currentMeal}`;
-    reservationMap = globalAllData[key] || {};
-  }
-
-  // 自动清理 7 天前旧数据以保持轻量
-  function cleanExpiredData() {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7)).toISOString().split('T')[0];
-
-    Object.keys(globalAllData).forEach(key => {
-      if (key.startsWith('RES_')) {
-        const datePart = key.split('_')[1];
-        if (datePart && datePart < sevenDaysAgo) {
-          delete globalAllData[key];
-        }
-      }
-    });
-  }
-
-  async function saveData() {
-    const key = `RES_${selectedDate}_${currentMeal}`;
-    globalAllData[key] = reservationMap;
-    
-    cleanExpiredData(); // 保存前清理过期历史数据
-    renderGrid(); 
-
-    try {
-      await fetch(API_URL, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': SECRET_KEY
-        },
-        body: JSON.stringify(globalAllData)
-      });
-      updateSyncStatus(true, "更改已成功同步至全店");
-    } catch (err) {
-      alert("提交失败，请检查手机网络！");
-    }
-  }
-
-  function onSearchInput() {
-    const keyword = document.getElementById('searchInput').value.trim();
-    document.getElementById('clearSearchBtn').style.display = keyword ? 'flex' : 'none';
-    renderGrid();
-  }
-
-  function clearSearch() {
-    document.getElementById('searchInput').value = '';
-    document.getElementById('clearSearchBtn').style.display = 'none';
-    renderGrid();
-  }
-
-  function switchMeal(meal) {
-    currentMeal = meal;
-    document.getElementById('btnLunch').classList.toggle('active', meal === 'lunch');
-    document.getElementById('btnDinner').classList.toggle('active', meal === 'dinner');
-    updateCurrentReservationMap();
-    renderGrid();
-  }
-
-  function renderZones() {
-    const bar = document.getElementById('zoneBar');
-    bar.innerHTML = ZONES.map((zone, idx) => `
-      <div class="zone-tab ${idx === currentZoneIndex ? 'active' : ''}" onclick="switchZone(${idx})">
-        ${zone.name}
-      </div>
-    `).join('');
-  }
-
-  function switchZone(idx) {
-    currentZoneIndex = idx;
-    if (document.getElementById('searchInput').value) {
-      clearSearch();
-      return;
-    }
-    renderZones();
-    renderGrid();
-  }
-
-  function getCardBodyHtml(rec) {
-    if (rec.status === 'reserved') {
-      let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
-      return `
-        <div class="guest-name">👤 ${rec.guest}</div>
-        <div class="res-time">⏰ ${rec.time || '已预留'}</div>
-        ${extra ? `<div class="res-time">${extra}</div>` : ''}
-      `;
-    } 
-    if (rec.status === 'occupied') {
-      let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
-      return `
-        <div class="guest-name">👤 ${rec.guest || '用餐中'}</div>
-        ${rec.time ? `<div class="res-time">⏰ ${rec.time}入座</div>` : ''}
-        ${extra ? `<div class="res-time">${extra}</div>` : ''}
-        <div class="status-tag">🔥 就餐中</div>
-      `;
-    }
-    return `<div class="status-tag">点击预订</div>`;
-  }
-
-  function renderGrid() {
-    const grid = document.getElementById('tableGrid');
-    const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
-
-    // 搜索模式（显示全店、跨日期的搜索结果）
-    if (keyword !== '') {
-      let matchedTables = [];
-
-      Object.keys(globalAllData).forEach(storeKey => {
-        if (!storeKey.startsWith('RES_')) return;
+    // 页面加载时自动获取一次云端数据
+    window.onload = function() {
+        // 自动设置默认时间为当前时间后1小时
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        document.getElementById('datetime').value = now.toISOString().slice(0, 16);
         
-        const parts = storeKey.split('_');
-        const resDate = parts[1];
-        const resMeal = parts[2] === 'lunch' ? '午市' : '晚市';
-        const resMap = globalAllData[storeKey];
-
-        ZONES.forEach(zone => {
-          zone.tables.forEach(t => {
-            const rec = resMap[t.id];
-            if (rec && rec.status !== 'free') {
-              const guestMatch = rec.guest && rec.guest.toLowerCase().includes(keyword);
-              const phoneMatch = rec.phone && rec.phone.toLowerCase().includes(keyword);
-              if (guestMatch || phoneMatch) {
-                matchedTables.push({ 
-                  ...t, 
-                  zoneName: zone.name, 
-                  dateStr: resDate, 
-                  weekdayStr: getWeekdayText(resDate),
-                  mealStr: resMeal,
-                  rec 
-                });
-              }
-            }
-          });
-        });
-      });
-
-      if (matchedTables.length === 0) {
-        grid.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">
-            🔍 未搜索到包含“<b style="color:#1f2937">${keyword}</b>”的预订记录
-          </div>
-        `;
-        return;
-      }
-
-      grid.innerHTML = matchedTables.map(item => `
-        <div class="table-card status-${item.rec.status}" onclick="openTableModal('${item.id}', '${item.cap}')">
-          <div class="card-header">
-            <div>
-              <span class="table-name">${item.id}</span>
-              <div class="search-meta-badges">
-                <span class="badge-item badge-zone">${item.zoneName}</span>
-                <span class="badge-item badge-date">${item.dateStr.substring(5)} ${item.weekdayStr}·${item.mealStr}</span>
-              </div>
-            </div>
-            <span class="table-cap">${item.cap}</span>
-          </div>
-          <div class="card-body">${getCardBodyHtml(item.rec)}</div>
-        </div>
-      `).join('');
-      return;
-    }
-
-    // 常规区域查看
-    const tables = ZONES[currentZoneIndex].tables;
-    grid.innerHTML = tables.map(t => {
-      const rec = reservationMap[t.id] || { status: 'free' };
-      return `
-        <div class="table-card status-${rec.status}" onclick="openTableModal('${t.id}', '${t.cap}')">
-          <div class="card-header">
-            <span class="table-name">${t.id}</span>
-            <span class="table-cap">${t.cap}</span>
-          </div>
-          <div class="card-body">${getCardBodyHtml(rec)}</div>
-        </div>
-      `;
-    }).join('');
-  }
-
-  function openTableModal(id, cap) {
-    const rec = reservationMap[id] || { status: 'free' };
-    currentActiveTable = { id, cap, ...rec };
-    
-    document.getElementById('modalTableTitle').innerText = `${id} (${cap}) 详情`;
-    renderModalBody(false);
-    document.getElementById('modalMask').classList.remove('hidden');
-  }
-
-  function renderModalBody(isEditing) {
-    const t = currentActiveTable;
-    const body = document.getElementById('modalBody');
-
-    if (t.status === 'free' || isEditing) {
-      const defaultTime = currentMeal === 'lunch' ? '12:30' : '18:00';
-      body.innerHTML = `
-        <div class="form-item">
-          <label class="label">客人备注名*</label>
-          <input class="input" id="inputGuest" placeholder="如: 张总 / 李女士4位" value="${t.guest || ''}">
-        </div>
-        <div class="form-item">
-          <label class="label">预留电话</label>
-          <input class="input" id="inputPhone" type="tel" placeholder="联系电话" value="${t.phone || ''}">
-        </div>
-        <div class="form-item">
-          <label class="label">预计到店时间</label>
-          <input class="input" id="inputTime" value="${t.time || defaultTime}">
-        </div>
-        <div class="form-item">
-          <label class="label">提前点菜菜品</label>
-          <textarea class="textarea" id="inputMenu" placeholder="填写提前点好的菜品清单...">${t.menu || ''}</textarea>
-        </div>
-        <div class="form-item">
-          <label class="label">其他特殊备注</label>
-          <input class="input" id="inputNote" placeholder="如: 需宝宝椅、靠窗、准备发票等" value="${t.note || ''}">
-        </div>
-        <button class="action-btn btn-primary" onclick="saveBooking()">保存预定信息</button>
-      `;
-      return;
-    }
-
-    if (t.status === 'reserved') {
-      body.innerHTML = `
-        <div class="detail-row"><span class="d-label">预 留 人：</span><span class="d-value bold">${t.guest}</span></div>
-        <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
-        <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
-        
-        <div class="btn-group">
-          <button class="action-btn btn-success" onclick="updateTableStatus('occupied')">客人已入座</button>
-          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改预定信息</button>
-          <button class="action-btn btn-danger" onclick="updateTableStatus('free')">取消预定</button>
-        </div>
-      `;
-      return;
-    }
-
-    if (t.status === 'occupied') {
-      body.innerHTML = `
-        <div class="occupied-badge">🔥 当前处于【就餐中】状态</div>
-        <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写备注'}</span></div>
-        <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
-        <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
-        
-        <div class="btn-group">
-          <button class="action-btn btn-primary" onclick="updateTableStatus('free')">客人已结账 / 清台 (恢复空闲)</button>
-          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改预定/备注信息</button>
-        </div>
-      `;
-    }
-  }
-
-  function saveBooking() {
-    const guest = document.getElementById('inputGuest').value.trim();
-    if (!guest) {
-      alert('请填写预订人姓名或备注');
-      return;
-    }
-
-    reservationMap[currentActiveTable.id] = {
-      status: currentActiveTable.status === 'occupied' ? 'occupied' : 'reserved',
-      guest: guest,
-      phone: document.getElementById('inputPhone').value,
-      time: document.getElementById('inputTime').value,
-      menu: document.getElementById('inputMenu').value,
-      note: document.getElementById('inputNote').value
+        loadReservations();
     };
 
-    saveData();
-    closeModal();
-  }
+    // 提交预订并同步至 GitHub
+    async function submitReservation() {
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const guests = document.getElementById('guests').value;
+        const datetime = document.getElementById('datetime').value;
+        const remark = document.getElementById('remark').value.trim();
+        const statusMsg = document.getElementById('statusMsg');
 
-  function updateTableStatus(status) {
-    if (status === 'free') {
-      delete reservationMap[currentActiveTable.id];
-    } else {
-      reservationMap[currentActiveTable.id] = {
-        ...reservationMap[currentActiveTable.id],
-        status: status
-      };
+        if(!name || !phone || !datetime) {
+            alert('请完整填写姓名、电话和就餐时间！');
+            return;
+        }
+
+        statusMsg.className = "status loading";
+        statusMsg.innerText = "正在同步至 GitHub 云端...";
+
+        const newRecord = { 
+            name, 
+            phone, 
+            guests, 
+            datetime, 
+            remark: remark || "无",
+            createdAt: new Date().toLocaleString() 
+        };
+
+        try {
+            // 1. 获取云端现有文件以提取 SHA 和内容
+            let sha = "";
+            let existingData = [];
+            const getResp = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+                headers: { "Authorization": `token ${GITHUB_TOKEN}` }
+            });
+
+            if (getResp.ok) {
+                const fileData = await getResp.json();
+                sha = fileData.sha;
+                // 解码 Base64
+                const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+                existingData = JSON.parse(decodedContent);
+            }
+
+            // 将新预订追加到数组头部
+            existingData.unshift(newRecord);
+
+            // 2. 编码并写入 GitHub
+            const contentEncoded = btoa(unescape(encodeURIComponent(JSON.stringify(existingData, null, 2))));
+            const putResp = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": `token ${GITHUB_TOKEN}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    message: `New reservation by ${name}`,
+                    content: contentEncoded,
+                    sha: sha ? sha : undefined
+                })
+            });
+
+            if (putResp.ok) {
+                statusMsg.className = "status success";
+                statusMsg.innerText = "预订成功！数据已实时安全保存到 GitHub。";
+                // 清空输入框
+                document.getElementById('name').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('remark').value = '';
+                // 刷新列表
+                loadReservations();
+            } else {
+                const err = await putResp.json();
+                statusMsg.className = "status error";
+                statusMsg.innerText = "同步失败: " + (err.message || "未知错误");
+            }
+        } catch (e) {
+            statusMsg.className = "status error";
+            statusMsg.innerText = "网络异常或配置错误: " + e.message;
+        }
     }
-    saveData();
-    closeModal();
-  }
 
-  function closeModal() {
-    document.getElementById('modalMask').classList.add('hidden');
-    currentActiveTable = null;
-  }
+    // 从 GitHub 读取预订列表
+    async function loadReservations() {
+        const listContainer = document.getElementById('reservationList');
+        listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 20px;">正在加载云端数据...</div>`;
+
+        try {
+            const resp = await fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`, {
+                headers: { "Authorization": `token ${GITHUB_TOKEN}` },
+                cache: "no-cache"
+            });
+
+            if (resp.ok) {
+                const fileData = await resp.json();
+                const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
+                const data = JSON.parse(decodedContent);
+
+                if (data.length === 0) {
+                    listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 20px;">暂无预订记录</div>`;
+                    return;
+                }
+
+                let html = "";
+                data.forEach(item => {
+                    html += `
+                        <div class="reservation-item">
+                            <div class="res-header">
+                                <span>${item.name} (${item.phone})</span>
+                                <span style="color: #e67e22;">${item.guests}</span>
+                            </div>
+                            <div class="res-body">
+                                预约时间：${item.datetime.replace('T', ' ')} | 备注：${item.remark}
+                            </div>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            } else if (resp.status === 404) {
+                listContainer.innerHTML = `<div style="text-align: center; color: #888; padding: 20px;">云端暂无 reservations.json 文件，提交第一条预订后自动创建</div>`;
+            } else {
+                listContainer.innerHTML = `<div style="text-align: center; color: #c0392b; padding: 20px;">加载失败，请检查网络或 Token 权限</div>`;
+            }
+        } catch (e) {
+            listContainer.innerHTML = `<div style="text-align: center; color: #c0392b; padding: 20px;">加载出错: ${e.message}</div>`;
+        }
+    }
 </script>
 
 </body>
 </html>
+
