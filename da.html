@@ -123,7 +123,7 @@
       <span class="sync-dot" id="syncDot"></span>
       <span id="syncText">正在连接云端看板...</span>
     </div>
-    <span class="bin-info" id="binInfoDisplay">GitHub 云端就绪</span>
+    <span class="bin-info" id="binInfoDisplay">云端已就绪</span>
   </div>
 
   <!-- 区域切换 Tab -->
@@ -153,13 +153,11 @@
 
 <script>
   /******************************************************************
-   * GitHub 云数据库配置
+   * 云数据库配置
    ******************************************************************/
-  const GITHUB_USER = "guan25578-hub";
-  const GITHUB_REPO = "DABAOTANG";
-  const GITHUB_TOKEN = "Ghp_jilTYArhDxCl5KxheQPSolzK96jmRr3OWARk";
-  const FILE_PATH = "reservations_data.json";
-  const GITHUB_API_URL = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${FILE_PATH}`;
+  const BIN_ID = "6ac62506ffd5d1605355a13d";
+  const SECRET_KEY = "$2a$10$hGE7gq9vMON78zjVzSkOP.2/jb0MfG9yk6mKkjxgdBjTK8cJiyLIu";
+  const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
   // 定义所有大桌（可坐10人）列表
   const largeTables = [
@@ -216,7 +214,6 @@
   let reservationMap = {}; 
   let currentActiveTable = null;
   let syncTimer = null;
-  let currentFileSha = ""; // GitHub 写入需要的文件 SHA
 
   window.onload = function() {
     document.getElementById('datePicker').value = selectedDate;
@@ -270,29 +267,18 @@
 
   async function loadData() {
     try {
-      const res = await fetch(GITHUB_API_URL, {
-        headers: { 
-          'Authorization': `token ${GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github.v3+json'
-        }
+      const res = await fetch(`${API_URL}/latest`, {
+        headers: { 'X-Master-Key': SECRET_KEY }
       });
       if (res.ok) {
-        const fileData = await res.json();
-        currentFileSha = fileData.sha;
-        // Base64 解码并处理中文编码
-        const decodedContent = decodeURIComponent(escape(atob(fileData.content)));
-        globalAllData = JSON.parse(decodedContent) || {};
-        updateSyncStatus(true, "GitHub 云端实时同步中 (15s刷新)");
-      } else if (res.status === 404) {
-        // 文件尚不存在，属于正常新库初始化
-        globalAllData = {};
-        currentFileSha = "";
-        updateSyncStatus(true, "GitHub 云端就绪 (首次使用将自动创建)");
+        const result = await res.json();
+        globalAllData = result.record || {};
+        updateSyncStatus(true, "全店实时同步中 (15s刷新)");
       } else {
-        updateSyncStatus(false, "GitHub 连接失败，请检查 Token");
+        updateSyncStatus(false, "云端连接失败，请检查网络");
       }
     } catch (err) {
-      updateSyncStatus(false, "网络异常，无法连接 GitHub");
+      updateSyncStatus(false, "网络异常，无法连接云端");
     }
 
     updateCurrentReservationMap();
@@ -327,36 +313,15 @@
     renderGrid(); 
 
     try {
-      // 将数据转为 JSON 字符串并进行 Base64 编码（完美支持中文）
-      const jsonString = JSON.stringify(globalAllData, null, 2);
-      const contentEncoded = btoa(unescape(encodeURIComponent(jsonString)));
-
-      const bodyData = {
-        message: `Update reservation data for ${selectedDate} ${currentMeal}`,
-        content: contentEncoded
-      };
-      if (currentFileSha) {
-        bodyData.sha = currentFileSha;
-      }
-
-      const putRes = await fetch(GITHUB_API_URL, {
+      await fetch(API_URL, {
         method: 'PUT',
         headers: {
-          'Authorization': `token ${GITHUB_TOKEN}`,
           'Content-Type': 'application/json',
-          'Accept': 'application/vnd.github.v3+json'
+          'X-Master-Key': SECRET_KEY
         },
-        body: JSON.stringify(bodyData)
+        body: JSON.stringify(globalAllData)
       });
-
-      if (putRes.ok) {
-        const putResult = await putRes.json();
-        currentFileSha = putResult.content.sha;
-        updateSyncStatus(true, "更改已成功同步至 GitHub 云端");
-      } else {
-        const errJson = await putRes.json();
-        alert("同步至 GitHub 失败: " + (errJson.message || "未知错误"));
-      }
+      updateSyncStatus(true, "更改已成功同步至全店");
     } catch (err) {
       alert("提交失败，请检查手机网络！");
     }
