@@ -42,16 +42,16 @@
 
     /* 桌态网格 */
     .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .table-card { min-height: 95px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
+    .table-card { min-height: 105px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
     .table-card:active { transform: scale(0.97); }
     .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .table-name { font-size: 15px; font-weight: bold; }
     .table-cap { font-size: 11px; opacity: 0.85; }
     .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
-    .card-body { margin-top: 6px; }
+    .card-body { margin-top: 4px; }
     .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; }
-    .status-tag { font-size: 11px; opacity: 0.75; }
+    .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .status-tag { font-size: 11px; opacity: 0.85; margin-top: 4px; font-weight: 500; }
 
     /* 色彩规范 */
     .status-free-bg { background-color: #22c55e; }
@@ -79,6 +79,7 @@
     .d-value.phone a { color: #2563eb; font-weight: bold; text-decoration: underline; }
     .d-value.highlight { color: #d97706; font-weight: 500; }
     .d-value.warn { color: #dc2626; }
+    .occupied-badge { margin-bottom: 15px; padding: 8px 12px; background: #fee2e2; border-radius: 8px; color: #b91c1c; font-size: 13px; font-weight: bold; text-align: center; }
 
     /* 按钮组 */
     .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
@@ -108,7 +109,7 @@
     <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">✕</button>
   </div>
 
-  <!-- 云端同步状态 -->
+  <!-- 云端同步指示灯 -->
   <div class="sync-status">
     <div class="status-left">
       <span class="sync-dot" id="syncDot"></span>
@@ -301,7 +302,6 @@
 
   function switchZone(idx) {
     currentZoneIndex = idx;
-    // 切换区域时自动清空搜索状态
     if (document.getElementById('searchInput').value) {
       clearSearch();
       return;
@@ -310,11 +310,33 @@
     renderGrid();
   }
 
+  // 生成桌态卡片内容
+  function getCardBodyHtml(rec) {
+    if (rec.status === 'reserved') {
+      let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
+      return `
+        <div class="guest-name">👤 ${rec.guest}</div>
+        <div class="res-time">⏰ ${rec.time || '已预留'}</div>
+        ${extra ? `<div class="res-time">${extra}</div>` : ''}
+      `;
+    } 
+    if (rec.status === 'occupied') {
+      let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
+      return `
+        <div class="guest-name">👤 ${rec.guest || '用餐中'}</div>
+        ${rec.time ? `<div class="res-time">⏰ ${rec.time}入座</div>` : ''}
+        ${extra ? `<div class="res-time">${extra}</div>` : ''}
+        <div class="status-tag">🔥 就餐中</div>
+      `;
+    }
+    return `<div class="status-tag">点击预订</div>`;
+  }
+
   function renderGrid() {
     const grid = document.getElementById('tableGrid');
     const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
 
-    // 模式 A：搜索模式（跨全店所有区域查找）
+    // 搜索模式
     if (keyword !== '') {
       let matchedTables = [];
 
@@ -340,52 +362,32 @@
         return;
       }
 
-      grid.innerHTML = matchedTables.map(item => {
-        const rec = item.rec;
-        let bodyHtml = '';
-        if (rec.status === 'reserved') {
-          bodyHtml = `<div class="guest-name">👤 ${rec.guest}</div><div class="res-time">⏰ ${rec.time}</div>`;
-        } else if (rec.status === 'occupied') {
-          bodyHtml = `<div class="status-tag">🔥 就餐中</div>`;
-        }
-
-        return `
-          <div class="table-card status-${rec.status}" onclick="openTableModal('${item.id}', '${item.cap}')">
-            <div class="card-header">
-              <div>
-                <span class="table-name">${item.id}</span>
-                <div><span class="search-zone-badge">${item.zoneName}</span></div>
-              </div>
-              <span class="table-cap">${item.cap}</span>
+      grid.innerHTML = matchedTables.map(item => `
+        <div class="table-card status-${item.rec.status}" onclick="openTableModal('${item.id}', '${item.cap}')">
+          <div class="card-header">
+            <div>
+              <span class="table-name">${item.id}</span>
+              <div><span class="search-zone-badge">${item.zoneName}</span></div>
             </div>
-            <div class="card-body">${bodyHtml}</div>
+            <span class="table-cap">${item.cap}</span>
           </div>
-        `;
-      }).join('');
+          <div class="card-body">${getCardBodyHtml(item.rec)}</div>
+        </div>
+      `).join('');
       return;
     }
 
-    // 模式 B：常规按区域查看
+    // 常规区域查看
     const tables = ZONES[currentZoneIndex].tables;
     grid.innerHTML = tables.map(t => {
       const rec = reservationMap[t.id] || { status: 'free' };
-      let bodyHtml = '';
-
-      if (rec.status === 'reserved') {
-        bodyHtml = `<div class="guest-name">👤 ${rec.guest}</div><div class="res-time">⏰ ${rec.time}</div>`;
-      } else if (rec.status === 'occupied') {
-        bodyHtml = `<div class="status-tag">🔥 就餐中</div>`;
-      } else {
-        bodyHtml = `<div class="status-tag">点击预订</div>`;
-      }
-
       return `
         <div class="table-card status-${rec.status}" onclick="openTableModal('${t.id}', '${t.cap}')">
           <div class="card-header">
             <span class="table-name">${t.id}</span>
             <span class="table-cap">${t.cap}</span>
           </div>
-          <div class="card-body">${bodyHtml}</div>
+          <div class="card-body">${getCardBodyHtml(rec)}</div>
         </div>
       `;
     }).join('');
@@ -436,7 +438,7 @@
       body.innerHTML = `
         <div class="detail-row"><span class="d-label">预 留 人：</span><span class="d-value bold">${t.guest}</span></div>
         <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time}</span></div>
+        <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
         <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
@@ -451,12 +453,16 @@
 
     if (t.status === 'occupied') {
       body.innerHTML = `
-        <div style="text-align:center; padding: 20px 0;">
-          <h3 style="color:#dc2626;">🔥 当前处于【就餐中】状态</h3>
-          <p style="margin-top:10px; font-size:14px; color:#4b5563;">${t.guest ? '客人：' + t.guest : ''}</p>
-        </div>
+        <div class="occupied-badge">🔥 当前处于【就餐中】状态</div>
+        <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写备注'}</span></div>
+        <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
+        <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
+        <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
+        <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
+        
         <div class="btn-group">
           <button class="action-btn btn-primary" onclick="updateTableStatus('free')">客人已结账 / 清台 (恢复空闲)</button>
+          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改预定/备注信息</button>
         </div>
       `;
     }
@@ -470,7 +476,7 @@
     }
 
     reservationMap[currentActiveTable.id] = {
-      status: 'reserved',
+      status: currentActiveTable.status === 'occupied' ? 'occupied' : 'reserved',
       guest: guest,
       phone: document.getElementById('inputPhone').value,
       time: document.getElementById('inputTime').value,
