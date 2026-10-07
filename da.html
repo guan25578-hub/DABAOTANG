@@ -131,46 +131,60 @@
 
 <script>
   /******************************************************************
-   * 已为您硬编码绑定您的专属云数据库凭证
+   * 云数据库配置
    ******************************************************************/
   const BIN_ID = "6ac62506ffd5d1605355a13d";
   const SECRET_KEY = "$2a$10$hGE7gq9vMON78zjVzSkOP.2/jb0MfG9yk6mKkjxgdBjTK8cJiyLIu";
   const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
+  // 定义所有大桌（可坐10人）的台号列表
+  const largeTables = [
+    '③', '④', '⑦', '⑧',
+    '13号', '14号', '16号', '17号',
+    '22号', '26号', '27号', '28号', '29号', '30号',
+    '大饭堂-饭1', '知青包厢', '生产队包厢', '联队包厢', '合作社包厢', '人民公社包厢'
+  ];
+
+  // 计算桌号建议人数的辅助函数
+  const getCap = (id) => largeTables.includes(id) ? '10人' : '6人左右';
+
   // 区域与台号全量配置
   const ZONES = [
     {
       name: '收银台旁边',
-      tables: ['①','②','③','④','⑤','⑥','⑦','⑧'].map(id => ({ id, cap: '2-4人' }))
+      tables: ['①','②','③','④','⑤','⑥','⑦','⑧'].map(id => ({ id, cap: getCap(id) }))
     },
     {
       name: '旧厅',
-      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 1}号`, cap: '4-6人' }))
+      tables: Array.from({ length: 18 }, (_, i) => {
+        const id = `${i + 1}号`;
+        return { id, cap: getCap(id) };
+      })
     },
     {
       name: '新厅',
-      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 19}号`, cap: '4-6人' }))
+      tables: Array.from({ length: 18 }, (_, i) => {
+        const id = `${i + 19}号`;
+        return { id, cap: getCap(id) };
+      })
     },
     {
       name: '包厢',
       tables: [
-        { id: '大饭堂-饭1', cap: '8-10人' },
-        { id: '大饭堂-饭2', cap: '8-10人' },
-        { id: '大饭堂-饭3', cap: '8-10人' },
-        { id: '知青包厢', cap: '10-12人' },
-        { id: '生产队包厢', cap: '12-15人' },
-        { id: '合作社包厢', cap: '10-12人' },
-        { id: '联队包厢', cap: '10人' },
-        { id: '人民公社包厢', cap: '16-20人' }
-      ]
+        '大饭堂-饭1', '大饭堂-饭2', '大饭堂-饭3',
+        '知青包厢', '生产队包厢', '合作社包厢', '联队包厢', '人民公社包厢'
+      ].map(id => ({ id, cap: getCap(id) }))
     },
     {
       name: '外棚',
-      tables: Array.from({ length: 8 }, (_, i) => ({ id: `外${i + 1}`, cap: '4-6人' }))
+      tables: Array.from({ length: 8 }, (_, i) => ({ id: `外${i + 1}`, cap: getCap(`外${i + 1}`) }))
     },
     {
       name: '户外花园',
-      tables: Array.from({ length: 4 }, (_, i) => ({ id: `${i + 37}号`, cap: '6-8人' }))
+      tables: Array.from({ length: 4 }, (_, i) => {
+        const id = `${i + 37}号`;
+        return { id, cap: getCap(id) };
+      })
     }
   ];
 
@@ -192,7 +206,7 @@
     renderZones();
     loadData();
 
-    // 核心逻辑：每 3 秒自动拉取云端最新数据，实现多端同步
+    // 每 3 秒自动拉取云端最新数据，实现全店多端同步
     setInterval(loadData, 3000);
   };
 
