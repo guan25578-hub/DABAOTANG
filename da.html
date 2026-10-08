@@ -40,15 +40,17 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
 
-        /* 桌态网格 */
+        /* 桌态网格 —— 固定卡片高度，防止文字过多撑乱布局 */
         .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .table-card { min-height: 105px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
+        .table-card { height: 115px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.1s; }
         .table-card:active { transform: scale(0.97); }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .table-name { font-size: 15px; font-weight: bold; }
         .table-cap { font-size: 11px; opacity: 0.85; }
         .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
-        .card-body { margin-top: 4px; }
+        
+        /* 卡片内部文本溢出省略，保持格式绝对整齐 */
+        .card-body { margin-top: 4px; overflow: hidden; }
         .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .status-tag { font-size: 11px; opacity: 0.85; margin-top: 4px; font-weight: 500; }
@@ -72,16 +74,14 @@
         .form-item { margin-bottom: 12px; }
         .label { font-size: 13px; color: #374151; font-weight: 500; display: block; margin-bottom: 4px; }
         .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
-        .textarea { height: 60px; resize: none; background: #fff; }
         
-        /* 菜单选择面板样式 */
-        .menu-search-input { width: 100%; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; margin-bottom: 8px; outline: none; background: #fff; }
-        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; margin-top: 4px; }
-        .menu-category-title { font-size: 12px; font-weight: bold; color: #2563eb; margin: 6px 0 4px 0; border-bottom: 1px dashed #e5e7eb; padding-bottom: 2px; }
-        .menu-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 4px 0; border-bottom: 1px solid #f3f4f6; }
+        /* 菜单选择面板优化 */
+        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; max-height: 220px; overflow-y: auto; margin-top: 4px; }
+        .menu-category-title { font-size: 12px; font-weight: bold; color: #2563eb; margin: 8px 0 4px 0; border-bottom: 1px dashed #e5e7eb; padding-bottom: 2px; }
+        .menu-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
         .menu-item-name { flex-grow: 1; color: #374151; }
-        .menu-sub-select { font-size: 12px; padding: 2px 6px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; margin-right: 6px; outline: none; }
-        .menu-qty-input { width: 45px; font-size: 12px; padding: 2px 4px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; background: #fff; outline: none; }
+        .menu-sub-select { font-size: 11px; padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 4px; background: #fff; margin-right: 4px; outline: none; }
+        .menu-qty-input { width: 40px; font-size: 12px; padding: 3px 4px; border: 1px solid #d1d5db; border-radius: 4px; text-align: center; background: #fff; outline: none; }
 
         .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
         .d-label { color: #6b7280; width: 90px; flex-shrink: 0; }
@@ -154,43 +154,39 @@
 </div>
 
 <script>
-  /******************************************************************
-   * 云数据库配置
-   ******************************************************************/
   const BIN_ID = "6ac62506ffd5d1605355a13d";
   const SECRET_KEY = "$2a$10$hGE7gq9vMON78zjVzSkOP.2/jb0MfG9yk6mKkjxgdBjTK8cJiyLIu";
   const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-  // 预设结构化菜单数据
   const MENU_CATEGORIES = [
     {
       category: "1. 主菜",
       items: [
-        { name: "隔水桑拿鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
+        { name: "隔水桑拿鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
         { name: "黑醋鹅", subs: ["1只", "半只", "熟上", "锅上"] },
-        { name: "虾蟹鸡煲", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "隔水蒸鱼(28元/斤)", subs: ["允鱼", "大头鱼"] },
-        { name: "菌菇浸鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "鲍鱼青榄五指毛桃浸鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "陈皮浸鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "夏枯草白豆浸鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "木瓜清补凉浸鸡", subs: ["扇鸡", "大鸡", "细鸡"] }
+        { name: "虾蟹鸡煲", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "隔水蒸鱼", subs: ["允鱼", "大头鱼"] },
+        { name: "菌菇浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "鲍鱼青榄五指毛桃浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "陈皮浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "夏枯草白豆浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "木瓜清补凉浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] }
       ]
     },
     {
       category: "3. 焖煮主菜",
       items: [
         { name: "大盘鱼", subs: ["允鱼", "大头鱼"] },
-        { name: "啫啫鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "大盘鱼加啫鸡", subs: ["①允鱼", "①大头鱼", "②扇鸡", "②大鸡", "②细鸡"] },
+        { name: "啫啫鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "大盘鱼加啫鸡", subs: ["①允鱼", "①大头鱼", "②扇鸡", "②大鸡", "②小鸡"] },
         { name: "大盘菜", subs: ["标准"] },
-        { name: "鲍鱼虾炆鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "酸菜炆鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "栗子炆鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "支竹炆鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
+        { name: "鲍鱼虾炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "酸菜炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "栗子炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "支竹炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
         { name: "酸菜炆鱼", subs: ["允鱼", "大头鱼"] },
-        { name: "虾蟹炆鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
-        { name: "大煲鸡", subs: ["扇鸡", "大鸡", "细鸡"] },
+        { name: "虾蟹炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "大煲鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
         { name: "炆鹅", subs: ["土豆炆", "酸菜炆", "栗子炆", "支竹炆"] }
       ]
     },
@@ -373,21 +369,22 @@
     renderGrid();
   }
 
+  // 卡片只显示精简摘要，用省略号处理，绝不撑大撑乱格式
   function getCardBodyHtml(rec) {
     if (rec.status === 'reserved') {
-      let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
+      let menuSummary = rec.menu ? `🍲 ${rec.menu.replace(/\n/g, ' / ')}` : '';
       return `
         <div class="guest-name">👤 ${rec.guest}</div>
         <div class="res-time">⏰ ${rec.time || '已预留'}</div>
-        ${extra ? `<div class="res-time">${extra}</div>` : ''}
+        <div class="res-time" style="color:#2563eb;">${menuSummary || (rec.note ? '📝 ' + rec.note : '')}</div>
       `;
     } 
     if (rec.status === 'occupied') {
-      let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
+      let menuSummary = rec.menu ? `🍲 ${rec.menu.replace(/\n/g, ' / ')}` : '';
       return `
         <div class="guest-name">👤 ${rec.guest || '用餐中'}</div>
         <div class="res-time">🔥 入座: ${rec.seatedTime || rec.time || '刚刚'}</div>
-        ${extra ? `<div class="res-time">${extra}</div>` : ''}
+        <div class="res-time" style="color:#2563eb;">${menuSummary || (rec.note ? '📝 ' + rec.note : '')}</div>
       `;
     }
     return `<div class="status-tag">点击预订</div>`;
@@ -454,6 +451,29 @@
     if (t.status === 'free' || isEditing) {
       const defaultTime = currentMeal === 'lunch' ? '12:30' : '18:00';
       
+      let menuHtml = '';
+      MENU_CATEGORIES.forEach((cat, cIdx) => {
+        menuHtml += `<div class="menu-category-title">${cat.category}</div>`;
+        cat.items.forEach((item, iIdx) => {
+          let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
+          menuHtml += `
+            <div class="menu-item-row" id="menu_row_${cIdx}_${iIdx}">
+              <span class="menu-item-name">
+                <input type="checkbox" class="m-chk" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="toggleMenuRow(${cIdx}, ${iIdx})" style="margin-right:6px;">
+                ${item.name}
+              </span>
+              <div id="m_controls_${cIdx}_${iIdx}" style="display:none; align-items:center;">
+                <select class="menu-sub-select m-sub" data-cidx="${cIdx}" data-iidx="${iIdx}">${subOptions}</select>
+                <input type="number" class="menu-qty-input m-qty" data-cidx="${cIdx}" data-iidx="${iIdx}" value="1" min="1">
+                <button type="button" onclick="addSameMenu(${cIdx}, ${iIdx})" style="background:#e5e7eb; border:none; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:4px; cursor:pointer;" title="点两份同菜不同做法">+同款</button>
+              </div>
+            </div>
+            <!-- 动态生成的同款不同做法容器 -->
+            <div id="extra_rows_${cIdx}_${iIdx}"></div>
+          `;
+        });
+      });
+
       body.innerHTML = `
         <div class="form-item">
           <label class="label">客人备注名*</label>
@@ -468,9 +488,8 @@
           <input class="input" id="inputTime" value="${t.time || defaultTime}">
         </div>
         <div class="form-item">
-          <label class="label">选择预点菜品</label>
-          <input type="text" id="menuSearchInput" class="menu-search-input" placeholder="🔍 输入菜名快速筛选（如：鸡、鹅、排骨）..." oninput="filterMenuSelector()">
-          <div class="menu-selector-box" id="menuSelectorBox"></div>
+          <label class="label">预点菜品 (勾选后可选择做法/数量，支持点多份不同做法)</label>
+          <div class="menu-selector-box">${menuHtml}</div>
         </div>
         <div class="form-item" style="margin-top:8px;">
           <label class="label">其他特殊备注</label>
@@ -478,38 +497,6 @@
         </div>
         <button class="action-btn btn-primary" onclick="saveBooking()">保存预定信息</button>
       `;
-
-      // 渲染菜单列表
-      renderMenuSelectorRows();
-
-      // 如果是修改状态，尝试反向勾选已点菜单
-      setTimeout(() => {
-        if (t.menu) {
-          MENU_CATEGORIES.forEach((cat, cIdx) => {
-            cat.items.forEach((item, iIdx) => {
-              if (t.menu.includes(item.name)) {
-                const chk = document.getElementById(`m_chk_${cIdx}_${iIdx}`);
-                if (chk) {
-                  chk.checked = true;
-                  // 尝试提取数量和规格
-                  const lines = t.menu.split('\n');
-                  lines.forEach(line => {
-                    if (line.includes(item.name)) {
-                      // 匹配类似 隔水桑拿鸡(扇鸡) x2 的格式
-                      const qtyMatch = line.match(/x(\d+)/);
-                      if (qtyMatch) {
-                        const qtyInput = document.getElementById(`m_qty_${cIdx}_${iIdx}`);
-                        if (qtyInput) qtyInput.value = qtyMatch[1];
-                      }
-                    }
-                  });
-                }
-              }
-            });
-          });
-        }
-      }, 50);
-
       return;
     }
 
@@ -535,7 +522,7 @@
         <div class="occupied-badge">🔥 当前处于【就餐中】状态</div>
         <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写备注'}</span></div>
         <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">入座时间：</span><span class="d-value highlight">${t.seatedTime || t.time || '记录缺失'}</span></div>
+        <div class="detail-row"><span class="d-label">入座时间：</span><span class="d-value highlight">${t.seatedTime || t.time || '刚刚'}</span></div>
         <div class="detail-row"><span class="d-label">预点菜品：</span><span class="d-value highlight" style="white-space:pre-line;">${t.menu || '无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
@@ -547,50 +534,34 @@
     }
   }
 
-  // 渲染菜单列表（支持关键字筛选）
-  function renderMenuSelectorRows(filterText = '') {
-    const box = document.getElementById('menuSelectorBox');
-    if (!box) return;
-
-    let html = '';
-    const lowerFilter = filterText.toLowerCase();
-
-    MENU_CATEGORIES.forEach((cat, cIdx) => {
-      let catHtml = '';
-      let hasVisibleItem = false;
-
-      cat.items.forEach((item, iIdx) => {
-        if (!lowerFilter || item.name.toLowerCase().includes(lowerFilter)) {
-          hasVisibleItem = true;
-          let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
-          catHtml += `
-            <div class="menu-item-row" id="row_${cIdx}_${iIdx}">
-              <span class="menu-item-name">
-                <input type="checkbox" id="m_chk_${cIdx}_${iIdx}" data-name="${item.name}" style="margin-right:6px;">
-                ${item.name}
-              </span>
-              <div>
-                <select id="m_sub_${cIdx}_${iIdx}" class="menu-sub-select">${subOptions}</select>
-                <input type="number" id="m_qty_${cIdx}_${iIdx}" class="menu-qty-input" placeholder="数量" value="1">
-              </div>
-            </div>
-          `;
-        }
-      });
-
-      if (hasVisibleItem) {
-        html += `<div class="menu-category-title">${cat.category}</div>` + catHtml;
-      }
-    });
-
-    box.innerHTML = html || `<div style="text-align:center; color:#9ca3af; padding:15px; font-size:13px;">未找到匹配的菜品</div>`;
+  // 勾选菜品时显示规格和数量选择框
+  function toggleMenuRow(cIdx, iIdx) {
+    const chk = document.querySelector(`.m-chk[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+    const controls = document.getElementById(`m_controls_${cIdx}_${iIdx}`);
+    if (chk.checked) {
+      controls.style.display = 'flex';
+    } else {
+      controls.style.display = 'none';
+      document.getElementById(`extra_rows_${cIdx}_${iIdx}`).innerHTML = ''; // 清空附加同款
+    }
   }
 
-  // 触发菜单内联搜索
-  function filterMenuSelector() {
-    const val = document.getElementById('menuSearchInput').value.trim();
-    // 重新渲染，并保持之前已经勾选的状态需要注意由于动态重建，这里简化为只按关键字展示
-    renderMenuSelectorRows(val);
+  // 核心功能：添加同款不同做法的菜品行
+  function addSameMenu(cIdx, iIdx) {
+    const item = MENU_CATEGORIES[cIdx].items[iIdx];
+    const extraContainer = document.getElementById(`extra_rows_${cIdx}_${iIdx}`);
+    let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
+    
+    const div = document.createElement('div');
+    div.className = 'extra-menu-row';
+    div.style.cssText = "display:flex; justify-content:flex-end; align-items:center; margin-top:4px;";
+    div.innerHTML = `
+      <span style="font-size:12px; color:#6b7280; margin-right:6px;">[另加做法]</span>
+      <select class="menu-sub-select extra-sub" data-cidx="${cIdx}" data-iidx="${iIdx}">${subOptions}</select>
+      <input type="number" class="menu-qty-input extra-qty" data-cidx="${cIdx}" data-iidx="${iIdx}" value="1" min="1">
+      <button type="button" onclick="this.parentElement.remove()" style="background:#fee2e2; color:#dc2626; border:none; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:4px; cursor:pointer;">删除</button>
+    `;
+    extraContainer.appendChild(div);
   }
 
   function saveBooking() {
@@ -600,17 +571,26 @@
       return;
     }
 
-    // 收集选中的菜品（遍历全部原始分类，防止过滤后找不到未展示的已勾选项）
     let selectedMenus = [];
-    MENU_CATEGORIES.forEach((cat, cIdx) => {
-      cat.items.forEach((item, iIdx) => {
-        const chk = document.getElementById(`m_chk_${cIdx}_${iIdx}`);
-        if (chk && chk.checked) {
-          const sub = document.getElementById(`m_sub_${cIdx}_${iIdx}`).value;
-          const qty = document.getElementById(`m_qty_${cIdx}_${iIdx}`).value || '1';
-          selectedMenus.push(`${item.name}(${sub}) x${qty}`);
-        }
-      });
+
+    // 收集所有勾选的主菜
+    document.querySelectorAll('.m-chk:checked').forEach(chk => {
+      const cIdx = chk.dataset.cidx;
+      const iIdx = chk.dataset.iidx;
+      const item = MENU_CATEGORIES[cIdx].items[iIdx];
+      const sub = document.querySelector(`.m-sub[data-cidx='${cIdx}'][data-iidx='${iIdx}']`).value;
+      const qty = document.querySelector(`.m-qty[data-cidx='${cIdx}'][data-iidx='${iIdx}']`).value || '1';
+      selectedMenus.push(`${item.name}(${sub}) x${qty}`);
+    });
+
+    // 收集所有通过“+同款”增加的不同做法菜品
+    document.querySelectorAll('.extra-sub').forEach(sel => {
+      const cIdx = sel.dataset.cidx;
+      const iIdx = sel.dataset.iidx;
+      const item = MENU_CATEGORIES[cIdx].items[iIdx];
+      const sub = sel.value;
+      const qty = sel.parentElement.querySelector('.extra-qty').value || '1';
+      selectedMenus.push(`${item.name}(${sub}) x${qty}`);
     });
 
     const menuStr = selectedMenus.length > 0 ? selectedMenus.join('\n') : '';
