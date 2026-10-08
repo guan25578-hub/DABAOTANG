@@ -275,7 +275,6 @@
   let reservationMap = {}; 
   let currentActiveTable = null;
   let syncTimer = null;
-  let tempFormData = null; // 用于暂存编辑中的表单和菜单数据
 
   window.onload = function() {
     document.getElementById('datePicker').value = selectedDate;
@@ -539,7 +538,6 @@
 
     const rec = reservationMap[id] || { status: 'free' };
     currentActiveTable = { id, cap, ...rec };
-    tempFormData = null; // 清空暂存
     document.getElementById('modalTableTitle').innerText = `${id} (${cap}) 详情`;
     renderModalBody(false);
     document.getElementById('modalMask').classList.remove('hidden');
@@ -552,14 +550,6 @@
     if (t.status === 'free' || isEditing) {
       const defaultTime = currentMeal === 'lunch' ? '12:30' : '18:00';
       
-      // 如果有暂存数据，优先使用暂存的数据恢复
-      let formGuest = tempFormData ? tempFormData.guest : (t.guest || '');
-      let formPCount = tempFormData ? tempFormData.pcount : (t.pcount || '');
-      let formPhone = tempFormData ? tempFormData.phone : (t.phone || '');
-      let formTime = tempFormData ? tempFormData.time : (t.time || defaultTime);
-      let formNote = tempFormData ? tempFormData.note : (t.note || '');
-      let savedMenuLines = tempFormData ? tempFormData.menuLines : [];
-
       let menuHtml = '';
       MENU_CATEGORIES.forEach((cat, cIdx) => {
         menuHtml += `<div class="menu-category-title" data-cat="${cat.category}">${cat.category}</div>`;
@@ -610,19 +600,19 @@
       body.innerHTML = `
         <div class="form-item">
           <label class="label">客人姓名 / 备注名*</label>
-          <input class="input" id="inputGuest" placeholder="如: 李小姐" value="${formGuest}">
+          <input class="input" id="inputGuest" placeholder="如: 李小姐" value="${t.tempGuest !== undefined ? t.tempGuest : (t.guest || '')}">
         </div>
         <div class="form-item">
           <label class="label">用餐人数</label>
-          <input class="input" id="inputPCount" type="number" placeholder="如: 8人" value="${formPCount}">
+          <input class="input" id="inputPCount" type="number" placeholder="如: 8人" value="${t.tempPCount !== undefined ? t.tempPCount : (t.pcount || '')}">
         </div>
         <div class="form-item">
           <label class="label">预留电话</label>
-          <input class="input" id="inputPhone" type="tel" placeholder="联系电话" value="${formPhone}">
+          <input class="input" id="inputPhone" type="tel" placeholder="联系电话" value="${t.tempPhone !== undefined ? t.tempPhone : (t.phone || '')}">
         </div>
         <div class="form-item">
           <label class="label">预计到店时间</label>
-          <input class="input" id="inputTime" value="${formTime}">
+          <input class="input" id="inputTime" value="${t.tempTime !== undefined ? t.tempTime : (t.time || defaultTime)}">
         </div>
         <div class="form-item">
           <label class="label">本桌预点菜品</label>
@@ -633,14 +623,47 @@
         </div>
         <div class="form-item" style="margin-top:8px;">
           <label class="label">其他特殊备注</label>
-          <input class="input" id="inputNote" placeholder="如: 跨桌预定、靠窗等" value="${formNote}">
+          <input class="input" id="inputNote" placeholder="如: 跨桌预定、靠窗等" value="${t.tempNote !== undefined ? t.tempNote : (t.note || '')}">
         </div>
         <button class="action-btn btn-primary" onclick="showBookingPreview()">下一步：预览总汇并完成预定</button>
       `;
 
-      // 如果有暂存的菜单勾选状态，回填到表单中
-      if (savedMenuLines && savedMenuLines.length > 0) {
-        restoreMenuSelections(savedMenuLines);
+      // 如果有暂存的勾选菜单状态，回填到表单中
+      if (t.tempSelectedMenus && Array.isArray(t.tempSelectedMenus)) {
+        t.tempSelectedMenus.forEach(savedItem => {
+          // 在菜单中匹配相同名字的选项并勾选、恢复规格
+          MENU_CATEGORIES.forEach((cat, cIdx) => {
+            cat.items.forEach((item, iIdx) => {
+              if (item.name === savedItem.name) {
+                const chk = document.querySelector(`.m-chk[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+                if (chk && !chk.checked) {
+                  chk.checked = true;
+                  toggleMenuRow(cIdx, iIdx);
+                  // 恢复子选项/做法
+                  const subSel = document.querySelector(`.m-sub[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+                  if (subSel && savedItem.sub) subSel.value = savedItem.sub;
+                  const qtyInp = document.querySelector(`.m-qty[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+                  if (qtyInp && savedItem.qty) qtyInp.value = savedItem.qty;
+                  const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+                  if (cutSel && savedItem.cut) cutSel.value = savedItem.cut;
+                  const stbotSel = document.querySelector(`.m-stbot[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+                  if (stbotSel && savedItem.stbot) stbotSel.value = savedItem.stbot;
+                } else if (chk && chk.checked) {
+                  // 如果已经勾选过（比如同款），则新增一行同款
+                  addSameMenu(cIdx, iIdx);
+                  const extraContainer = document.getElementById(`extra_rows_${cIdx}_${iIdx}`);
+                  const lastRow = extraContainer.lastElementChild;
+                  if (lastRow) {
+                    if (savedItem.sub) lastRow.querySelector('.extra-sub').value = savedItem.sub;
+                    if (savedItem.qty) lastRow.querySelector('.extra-qty').value = savedItem.qty;
+                    if (savedItem.cut && lastRow.querySelector('.extra-cut')) lastRow.querySelector('.extra-cut').value = savedItem.cut;
+                    if (savedItem.stbot && lastRow.querySelector('.extra-stbot')) lastRow.querySelector('.extra-stbot').value = savedItem.stbot;
+                  }
+                }
+              }
+            });
+          });
+        });
       }
       return;
     }
@@ -659,7 +682,7 @@
         
         <div class="btn-group">
           <button class="action-btn btn-success" onclick="updateTableStatus('occupied')">客人已入座 (自动记时)</button>
-          <button class="action-btn btn-warning" onclick="prepareEditForm()">修改本桌信息</button>
+          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改本桌信息</button>
           <button class="action-btn btn-danger" onclick="updateTableStatus('free')">取消预定</button>
         </div>
       `;
@@ -678,70 +701,10 @@
         
         <div class="btn-group">
           <button class="action-btn btn-primary" onclick="updateTableStatus('free')">客人已结账 / 清台 (恢复空闲)</button>
-          <button class="action-btn btn-warning" onclick="prepareEditForm()">修改本桌信息</button>
+          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改本桌信息</button>
         </div>
       `;
     }
-  }
-
-  // 准备进入修改状态，把已有菜单解析并暂存，以便返回时能重新勾选
-  function prepareEditForm() {
-    const t = currentActiveTable;
-    if (t.menu) {
-      // 简单把旧菜单按行拆分，存入 tempFormData
-      let lines = t.menu.split('\n');
-      tempFormData = {
-        guest: t.guest,
-        pcount: t.pcount,
-        phone: t.phone,
-        time: t.time,
-        note: t.note,
-        menuLines: lines
-      };
-    }
-    renderModalBody(true);
-  }
-
-  // 根据暂存的菜单文本，自动勾选并填回表单控件
-  function restoreMenuSelections(lines) {
-    lines.forEach(line => {
-      // 遍历所有菜单分类寻找匹配
-      MENU_CATEGORIES.forEach((cat, cIdx) => {
-        cat.items.forEach((item, iIdx) => {
-          if (line.includes(item.name)) {
-            // 找到对应的菜品行，勾选它
-            const chk = document.querySelector(`.m-chk[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
-            if (chk && !chk.checked) {
-              chk.checked = true;
-              toggleMenuRow(cIdx, iIdx);
-            }
-            // 尝试匹配子规格或底蒸
-            const subSel = document.querySelector(`.m-sub[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
-            if (subSel) {
-              for (let opt of subSel.options) {
-                if (line.includes(opt.value)) {
-                  subSel.value = opt.value;
-                  break;
-                }
-              }
-            }
-            // 匹配底蒸选项
-            const stBotSel = document.querySelector(`.m-stbot[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
-            if (stBotSel) {
-              if (line.includes("铺鸡底蒸")) stBotSel.value = "鸡底蒸";
-              else if (line.includes("铺鱼底蒸")) stBotSel.value = "鱼底蒸";
-              else if (line.includes("双拼蒸")) stBotSel.value = "鸡底+鱼底双拼蒸";
-            }
-            // 匹配切法
-            const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
-            if (cutSel) {
-              if (line.includes("起片")) cutSel.value = "起片";
-              else if (line.includes("斩件")) cutSel.value = "斩件";
-            }
-          }
-        });
-      });
-    });
   }
 
   function filterMenuRows() {
@@ -777,7 +740,7 @@
   }
 
   function toggleMenuRow(cIdx, iIdx) {
-    const chk = document.querySelector(`.m-chk[data-cidx='${cidx}'][data-iidx='${iIdx}']`);
+    const chk = document.querySelector(`.m-chk[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
     const controls = document.getElementById(`m_controls_${cIdx}_${iIdx}`);
     if (chk.checked) {
       controls.style.display = 'flex';
@@ -870,6 +833,45 @@
     return selectedMenus;
   }
 
+  // 收集详细菜品结构对象用于回填
+  function collectMenuObjects() {
+    let list = [];
+    document.querySelectorAll('.m-chk:checked').forEach(chk => {
+      const cIdx = chk.dataset.cidx;
+      const iIdx = chk.dataset.iidx;
+      const item = MENU_CATEGORIES[cIdx].items[iIdx];
+      const sub = document.querySelector(`.m-sub[data-cidx='${cIdx}'][data-iidx='${iIdx}']`).value;
+      const qty = document.querySelector(`.m-qty[data-cidx='${cIdx}'][data-iidx='${iIdx}']`).value || '1';
+      const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+      const stbotSel = document.querySelector(`.m-stbot[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+      list.push({
+        name: item.name,
+        sub: sub,
+        qty: qty,
+        cut: cutSel ? cutSel.value : '',
+        stbot: stbotSel ? stbotSel.value : ''
+      });
+    });
+
+    document.querySelectorAll('.extra-sub').forEach(sel => {
+      const cIdx = sel.dataset.cidx;
+      const iIdx = sel.dataset.iidx;
+      const item = MENU_CATEGORIES[cIdx].items[iIdx];
+      const sub = sel.value;
+      const qty = sel.parentElement.querySelector('.extra-qty').value || '1';
+      const extraCut = sel.parentElement.querySelector('.extra-cut');
+      const extraStBot = sel.parentElement.querySelector('.extra-stbot');
+      list.push({
+        name: item.name,
+        sub: sub,
+        qty: qty,
+        cut: extraCut ? extraCut.value : '',
+        stbot: extraStBot ? extraStBot.value : ''
+      });
+    });
+    return list;
+  }
+
   function showBookingPreview() {
     const guest = document.getElementById('inputGuest').value.trim();
     if (!guest) {
@@ -881,17 +883,16 @@
     const phone = document.getElementById('inputPhone').value.trim();
     const time = document.getElementById('inputTime').value.trim();
     const note = document.getElementById('inputNote').value.trim();
-    const menus = collectMenuData();
 
-    // 暂存当前表单数据，以便点击“返回重新修改”时恢复
-    tempFormData = {
-      guest: guest,
-      pcount: pcount,
-      phone: phone,
-      time: time,
-      note: note,
-      menuLines: menus
-    };
+    // 暂存当前输入数据，防止点返回时丢失
+    currentActiveTable.tempGuest = guest;
+    currentActiveTable.tempPCount = pcount;
+    currentActiveTable.tempPhone = phone;
+    currentActiveTable.tempTime = time;
+    currentActiveTable.tempNote = note;
+    currentActiveTable.tempSelectedMenus = collectMenuObjects();
+
+    const menus = collectMenuData();
 
     const body = document.getElementById('modalBody');
     body.innerHTML = `
@@ -931,7 +932,6 @@
       seatedTime: currentActiveTable.seatedTime || ''
     };
 
-    tempFormData = null;
     await saveData();
     closeModal();
   }
@@ -960,7 +960,6 @@
     }
     document.getElementById('modalMask').classList.add('hidden');
     currentActiveTable = null;
-    tempFormData = null;
     loadData();
   }
 </script>
