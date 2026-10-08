@@ -22,13 +22,14 @@
         .search-input:focus { border-color: #2563eb; }
         .clear-search-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: #e5e7eb; color: #4b5563; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* 云端同步指示灯 */
+        /* 云端同步指示灯与手动刷新按钮 */
         .sync-status { font-size: 11px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
         .status-left { display: flex; align-items: center; gap: 6px; }
         .sync-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #9ca3af; display: inline-block; }
         .sync-dot.online { background-color: #22c55e; }
         .sync-dot.error { background-color: #ef4444; }
-        .bin-info { font-size: 10px; color: #9ca3af; }
+        .refresh-btn { border: 1px solid #cbd5e1; background: #fff; font-size: 11px; padding: 3px 8px; border-radius: 6px; cursor: pointer; font-weight: 500; color: #374151; transition: background-color 0.2s; }
+        .refresh-btn:active { background: #f1f5f9; }
 
         /* 区域导航栏 */
         .zone-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
@@ -42,7 +43,7 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
 
-        /* 桌态网格 —— 固定卡片高度，保持格式绝对整齐 */
+        /* 桌态网格 */
         .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
         .table-card { height: 125px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.1s; position: relative; }
         .table-card:active { transform: scale(0.97); }
@@ -51,7 +52,6 @@
         .table-cap { font-size: 11px; opacity: 0.85; }
         .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
         
-        /* 锁定角标提示 */
         .lock-badge { position: absolute; top: 0; right: 0; background: #dc2626; color: #fff; font-size: 10px; padding: 2px 6px; border-bottom-left-radius: 8px; font-weight: bold; }
 
         .card-body { margin-top: 4px; overflow: hidden; }
@@ -92,7 +92,6 @@
         .label { font-size: 14px; color: #374151; font-weight: bold; display: block; margin-bottom: 4px; }
         .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 15px; outline: none; }
         
-        /* 菜单选择面板 */
         .menu-search-input { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
         .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; }
         .menu-category-title { font-size: 16px; font-weight: bold; color: #2563eb; margin: 14px 0 8px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
@@ -101,7 +100,6 @@
         .menu-item-name { flex-grow: 1; color: #1f2937; font-weight: 500; display: flex; align-items: center; gap: 10px; }
         .m-chk { width: 22px; height: 22px; cursor: pointer; }
         
-        /* 下拉选择与数量输入框显著放大 */
         .menu-sub-select { font-size: 14px; padding: 7px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #fff; margin-right: 4px; outline: none; font-weight: bold; }
         .menu-qty-input { width: 50px; font-size: 15px; padding: 7px 4px; border: 1.5px solid #cbd5e1; border-radius: 6px; text-align: center; background: #fff; outline: none; font-weight: bold; }
 
@@ -113,11 +111,9 @@
         .d-value.warn { color: #dc2626; }
         .occupied-badge { margin-bottom: 15px; padding: 8px 12px; background: #fee2e2; border-radius: 8px; color: #b91c1c; font-size: 13px; font-weight: bold; text-align: center; }
 
-        /* 预览确认弹窗样式 */
         .preview-box { background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 15px; }
         .preview-box b { color: #1e293b; }
 
-        /* 按钮组 */
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
         .action-btn { width: 100%; border: none; border-radius: 8px; font-size: 16px; padding: 14px 0; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
         .action-btn:active { opacity: 0.8; }
@@ -139,22 +135,25 @@
     </div>
   </div>
 
-  <!-- 全局搜索栏 -->
+  <!-- 全局搜索栏（仅搜索当餐预订） -->
   <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索客人姓名或电话号码..." oninput="onSearchInput()">
+    <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索当餐客人姓名或电话号码..." oninput="onSearchInput()">
     <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">✕</button>
   </div>
 
-  <!-- 云端同步指示灯 -->
+  <!-- 云端同步指示灯与高效率工具栏 -->
   <div class="sync-status">
     <div class="status-left">
       <span class="sync-dot" id="syncDot"></span>
-      <span id="syncText">正在连接云端看板...</span>
+      <span id="syncText">云端连接中...</span>
     </div>
-    <span class="bin-info" id="binInfoDisplay">云端防冲突锁定已开启</span>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <button class="refresh-btn" onclick="loadData()">🔄 手动刷新</button>
+      <span class="bin-info">7天自动清理</span>
+    </div>
   </div>
 
-  <!-- 区域切换 Tab -->
+  <!-- 区域导航栏 -->
   <div class="zone-bar" id="zoneBar"></div>
 
   <!-- 状态图例 -->
@@ -250,7 +249,7 @@
         { name: "小鸡一只", subs: ["标准"] },
         { name: "允鱼一条", subs: ["标准"] },
         { name: "大头鱼一条", subs: ["标准"] },
-        { name: "清远鸡一只", subs: ["标准"] }, { name: "猪肉丸", subs: ["标准"] },
+        { name: "一只清远鸡", subs: ["标准"] }, { name: "猪肉丸", subs: ["标准"] },
         { name: "猪肚", subs: ["标准"] }, { name: "排骨段", subs: ["标准"] },
         { name: "桑拿排骨", subs: ["标准"] }, { name: "桑拿竹肠", subs: ["标准"] },
         { name: "火锅面", subs: ["标准"] }, { name: "清补凉", subs: ["标准"] },
@@ -285,12 +284,13 @@
   ];
 
   let currentMeal = 'lunch';
-  let currentZoneIndex = 0; // 0~5为对应区域，'summary' 表示全店当餐总汇版面
+  let currentZoneIndex = 0; 
   let selectedDate = new Date().toISOString().split('T')[0];
   let globalAllData = {}; 
   let reservationMap = {}; 
   let currentActiveTable = null;
   let syncTimer = null;
+  let lastInteractTime = Date.now();
 
   window.onload = function() {
     document.getElementById('datePicker').value = selectedDate;
@@ -299,15 +299,18 @@
       updateCurrentReservationMap();
     });
 
+    // 监测用户触摸或操作，恢复高效率轮询
+    ['touchstart', 'click', 'mousemove', 'scroll'].forEach(evt => {
+      document.addEventListener(evt, () => {
+        lastInteractTime = Date.now();
+        if (!syncTimer) startSync();
+      }, { passive: true });
+    });
+
     renderZones();
+    loadLocalCache(); // 1. 优先加载本地缓存，秒开防闪白
     loadData();
     startSync();
-
-    window.addEventListener('beforeunload', function() {
-      if (currentActiveTable) {
-        releaseLock(currentActiveTable.id);
-      }
-    });
 
     document.addEventListener("visibilitychange", function() {
       if (document.hidden) {
@@ -319,9 +322,20 @@
     });
   };
 
+  // 智能无操作休眠机制：2分钟无人操作自动休眠，省云端额度
   function startSync() {
-    if (!syncTimer) syncTimer = setInterval(loadData, 15000);
+    stopSync();
+    syncTimer = setInterval(() => {
+      if (Date.now() - lastInteractTime > 120000) {
+        updateSyncStatus(true, "休眠中 (点击屏幕恢复同步)");
+        stopSync();
+        return;
+      }
+      if (document.hidden || currentActiveTable) return;
+      loadData();
+    }, 45000); // 调优为 45 秒超长低消耗轮询
   }
+
   function stopSync() {
     if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
   }
@@ -333,6 +347,16 @@
     text.innerText = message;
   }
 
+  function loadLocalCache() {
+    try {
+      const cache = localStorage.getItem('dbt_global_data');
+      if (cache) {
+        globalAllData = JSON.parse(cache);
+        updateCurrentReservationMap();
+      }
+    } catch(e) {}
+  }
+
   async function loadData() {
     try {
       const res = await fetch(`${API_URL}/latest`, {
@@ -341,7 +365,8 @@
       if (res.ok) {
         const result = await res.json();
         globalAllData = result.record || {};
-        updateSyncStatus(true, "全店实时同步中 (每15秒刷新)");
+        try { localStorage.setItem('dbt_global_data', JSON.stringify(globalAllData)); } catch(e){}
+        updateSyncStatus(true, "全店实时同步中 (省额度模式)");
       } else {
         updateSyncStatus(false, "云端连接失败");
       }
@@ -357,9 +382,32 @@
     renderGrid();
   }
 
+  // 2. 自动清理超过 7 天前的过期历史数据（大大减轻服务器数据量）
+  function cleanOldData() {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const cutoffDateStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    Object.keys(globalAllData).forEach(key => {
+      if (key.startsWith('RES_')) {
+        const parts = key.split('_');
+        if (parts.length >= 2) {
+          const dateStr = parts[1];
+          if (dateStr < cutoffDateStr) {
+            delete globalAllData[key];
+          }
+        }
+      }
+    });
+  }
+
   async function saveData(updatedMap) {
     const key = `RES_${selectedDate}_${currentMeal}`;
     globalAllData[key] = updatedMap || reservationMap;
+
+    cleanOldData(); // 保存前清洗老旧无用数据
+
+    try { localStorage.setItem('dbt_global_data', JSON.stringify(globalAllData)); } catch(e){}
     renderGrid(); 
 
     try {
@@ -378,45 +426,6 @@
     if (!lockInfo) return false;
     const now = new Date().getTime();
     return (now - lockInfo.time) < 180000;
-  }
-
-  async function acquireLock(tableId) {
-    await loadData();
-    const key = `RES_${selectedDate}_${currentMeal}`;
-    reservationMap = globalAllData[key] || {};
-    
-    const rec = reservationMap[tableId] || { status: 'free' };
-    
-    if (rec.lock && isLockValid(rec.lock) && rec.lock.client !== myClientId) {
-      return { success: false, editor: rec.lock.client };
-    }
-
-    rec.lock = { client: myClientId, time: new Date().getTime() };
-    reservationMap[tableId] = rec;
-    await saveData(reservationMap);
-    return { success: true };
-  }
-
-  async function releaseLock(tableId) {
-    if (!tableId) return;
-    try {
-      const res = await fetch(`${API_URL}/latest`, { headers: { 'X-Master-Key': SECRET_KEY } });
-      if (res.ok) {
-        const result = await res.json();
-        let freshData = result.record || {};
-        const key = `RES_${selectedDate}_${currentMeal}`;
-        let freshMap = freshData[key] || {};
-        if (freshMap[tableId] && freshMap[tableId].lock && freshMap[tableId].lock.client === myClientId) {
-          delete freshMap[tableId].lock;
-          freshData[key] = freshMap;
-          await fetch(API_URL, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', 'X-Master-Key': SECRET_KEY },
-            body: JSON.stringify(freshData)
-          });
-        }
-      }
-    } catch(e) {}
   }
 
   function onSearchInput() {
@@ -457,7 +466,7 @@
     renderGrid();
   }
 
-  // 查重逻辑：同姓名 AND 同电话号码双重校验
+  // 3. 严格限定当餐关联：同日期、同餐市（午/晚），同姓名 AND 同电话校验
   function getOtherTablesForGuest(rec, currentTableId) {
     if (!rec || !rec.guest || !rec.guest.trim()) return [];
     const currentGuest = rec.guest.trim();
@@ -469,7 +478,6 @@
         let otherRec = reservationMap[tId];
         if (otherRec && otherRec.status !== 'free' && otherRec.guest && otherRec.guest.trim() === currentGuest) {
           const otherPhone = otherRec.phone ? otherRec.phone.trim() : '';
-          // 校验：名字相同且电话相同（支持跨区域）
           if (currentPhone === otherPhone) {
             others.push(tId);
           }
@@ -509,7 +517,6 @@
     return lockBadgeHtml + content;
   }
 
-  // 查找某个桌号归属的区域名称
   function getZoneNameByTableId(tableId) {
     for (let zone of ZONES) {
       if (zone.tables.some(t => t.id === tableId)) {
@@ -524,7 +531,6 @@
     const legendBar = document.getElementById('legendBar');
     const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
 
-    // 如果处于【全店当餐总汇】版面且没有全局搜索词
     if (currentZoneIndex === 'summary' && keyword === '') {
       legendBar.style.display = 'none';
       renderSummaryBoard(grid);
@@ -547,7 +553,7 @@
       });
 
       if (matchedTables.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">🔍 未搜索到相关预订记录</div>`;
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">🔍 未搜索到当前餐次的相关预订</div>`;
         return;
       }
 
@@ -575,7 +581,7 @@
     }).join('');
   }
 
-  // 渲染当餐整版可视化汇总看板
+  // 渲染整版当餐全店汇总看板
   function renderSummaryBoard(container) {
     let bookedTables = [];
     let totalPeople = 0;
@@ -595,7 +601,6 @@
       }
     });
 
-    // 依桌号名称排序，保持整齐
     bookedTables.sort((a, b) => a.id.localeCompare(b.id, 'zh-CN', { numeric: true }));
 
     const mealName = currentMeal === 'lunch' ? '🌞 午市' : '🌙 晚市';
@@ -605,7 +610,7 @@
         <div class="summary-stats-bar">
           <div class="stat-item">
             <div class="num">${bookedTables.length} 桌</div>
-            <div class="label">当前预订/就餐总数</div>
+            <div class="label">当前预订/就餐桌数</div>
           </div>
           <div class="stat-item">
             <div class="num">${totalPeople} 人</div>
@@ -639,7 +644,7 @@
 
       let otherTables = getOtherTablesForGuest(t, t.id);
       let linkedHtml = otherTables.length > 0 ? 
-        `<div style="color:#d97706; font-weight:bold; grid-column:1/-1;">🔗 关联同一客人其他桌位: ${otherTables.join('、')}</div>` : '';
+        `<div style="color:#d97706; font-weight:bold; grid-column:1/-1;">🔗 关联同一客人当餐其他桌位: ${otherTables.join('、')}</div>` : '';
 
       html += `
         <div class="summary-card" onclick="tryOpenTableModal('${t.id}', '${t.cap}')">
@@ -668,14 +673,14 @@
     container.innerHTML = html;
   }
 
-  async function tryOpenTableModal(id, cap) {
-    const lockResult = await acquireLock(id);
-    if (!lockResult.success) {
-      alert(`⚠️ 无法编辑：该桌台目前正在由 [${lockResult.editor}] 进行编辑操作，请稍候再试！`);
+  function tryOpenTableModal(id, cap) {
+    const rec = reservationMap[id] || { status: 'free' };
+    
+    if (rec.lock && isLockValid(rec.lock) && rec.lock.client !== myClientId) {
+      alert(`⚠️ 该桌台目前正在由 [${rec.lock.client}] 进行编辑操作，请稍候！`);
       return;
     }
 
-    const rec = reservationMap[id] || { status: 'free' };
     currentActiveTable = { id, cap, ...rec };
     document.getElementById('modalTableTitle').innerText = `${id} (${cap}) 详情`;
     renderModalBody(false);
@@ -755,7 +760,6 @@
         </div>
         <div class="form-item">
           <label class="label">本桌预点菜品</label>
-          <!-- 搜索框固定在滚动框上方 -->
           <input type="text" id="menuSearchInput" class="menu-search-input" style="margin-bottom: 8px;" placeholder="🔍 快速过滤菜品名称（如：鸡、鱼、骨...）" oninput="filterMenuRows()">
           <div class="menu-selector-box" style="margin-top: 0;">
             <div id="menuListContainer">${menuHtml}</div>
@@ -768,7 +772,6 @@
         <button class="action-btn btn-primary" onclick="showBookingPreview()">下一步：预览总汇并完成预定</button>
       `;
 
-      // 如果有暂存的勾选菜单状态，回填到表单中
       if (t.tempSelectedMenus && Array.isArray(t.tempSelectedMenus)) {
         t.tempSelectedMenus.forEach(savedItem => {
           MENU_CATEGORIES.forEach((cat, cIdx) => {
@@ -1020,7 +1023,6 @@
     const time = document.getElementById('inputTime').value.trim();
     const note = document.getElementById('inputNote').value.trim();
 
-    // 暂存所有输入数据，确保最后一步能够直接取用
     currentActiveTable.tempGuest = guest;
     currentActiveTable.tempPCount = pcount;
     currentActiveTable.tempPhone = phone;
@@ -1051,7 +1053,9 @@
   }
 
   async function saveBooking() {
-    delete reservationMap[currentActiveTable.id].lock;
+    if (reservationMap[currentActiveTable.id]) {
+      delete reservationMap[currentActiveTable.id].lock;
+    }
 
     reservationMap[currentActiveTable.id] = {
       ...reservationMap[currentActiveTable.id],
@@ -1076,7 +1080,9 @@
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       
-      delete reservationMap[currentActiveTable.id].lock;
+      if (reservationMap[currentActiveTable.id]) {
+        delete reservationMap[currentActiveTable.id].lock;
+      }
       reservationMap[currentActiveTable.id] = {
         ...reservationMap[currentActiveTable.id],
         status: status,
@@ -1088,9 +1094,6 @@
   }
 
   async function closeModal() {
-    if (currentActiveTable) {
-      await releaseLock(currentActiveTable.id);
-    }
     document.getElementById('modalMask').classList.add('hidden');
     currentActiveTable = null;
     loadData();
