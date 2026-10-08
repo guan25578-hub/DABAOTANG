@@ -1,95 +1,95 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>大宝堂餐厅预订系统</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 12px; color: #1f2937; }
-    .container { max-width: 650px; margin: 0 auto; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>饭店预订与桌态实时看板</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 12px; color: #1f2937; }
+        .container { max-width: 650px; margin: 0 auto; }
 
-    /* 顶部控制栏 */
-    .top-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .date-picker { font-size: 15px; font-weight: bold; border: 1px solid #d1d5db; background: #f9fafb; padding: 6px 10px; border-radius: 8px; outline: none; }
-    .meal-toggle { display: flex; background: #e5e7eb; border-radius: 8px; padding: 3px; }
-    .meal-btn { border: none; padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; background: transparent; color: #4b5563; }
-    .meal-btn.active { background: #1f2937; color: #fff; font-weight: bold; }
+        /* 顶部控制栏 */
+        .top-bar { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .date-picker { font-size: 15px; font-weight: bold; border: 1px solid #d1d5db; background: #f9fafb; padding: 6px 10px; border-radius: 8px; outline: none; }
+        .meal-toggle { display: flex; background: #e5e7eb; border-radius: 8px; padding: 3px; }
+        .meal-btn { border: none; padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; background: transparent; color: #4b5563; }
+        .meal-btn.active { background: #1f2937; color: #fff; font-weight: bold; }
 
-    /* 全局搜索栏组件 */
-    .search-container { position: relative; margin-bottom: 12px; }
-    .search-input { width: 100%; background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 10px 36px 10px 14px; font-size: 14px; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: border-color 0.2s; }
-    .search-input:focus { border-color: #2563eb; }
-    .clear-search-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: #e5e7eb; color: #4b5563; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        /* 全局搜索栏组件 */
+        .search-container { position: relative; margin-bottom: 12px; }
+        .search-input { width: 100%; background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 10px 36px 10px 14px; font-size: 14px; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: border-color 0.2s; }
+        .search-input:focus { border-color: #2563eb; }
+        .clear-search-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: #e5e7eb; color: #4b5563; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-    /* 云端同步指示灯 */
-    .sync-status { font-size: 11px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
-    .status-left { display: flex; align-items: center; gap: 6px; }
-    .sync-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #9ca3af; display: inline-block; }
-    .sync-dot.online { background-color: #22c55e; }
-    .sync-dot.error { background-color: #ef4444; }
-    .bin-info { font-size: 10px; color: #9ca3af; }
+        /* 云端同步指示灯 */
+        .sync-status { font-size: 11px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
+        .status-left { display: flex; align-items: center; gap: 6px; }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #9ca3af; display: inline-block; }
+        .sync-dot.online { background-color: #22c55e; }
+        .sync-dot.error { background-color: #ef4444; }
+        .bin-info { font-size: 10px; color: #9ca3af; }
 
-    /* 区域导航栏 */
-    .zone-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
-    .zone-tab { flex-shrink: 0; padding: 8px 16px; font-size: 14px; background: #fff; border-radius: 20px; color: #4b5563; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.03); white-space: nowrap; }
-    .zone-tab.active { background: #2563eb; color: #fff; font-weight: bold; }
+        /* 区域导航栏 */
+        .zone-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
+        .zone-tab { flex-shrink: 0; padding: 8px 16px; font-size: 14px; background: #fff; border-radius: 20px; color: #4b5563; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.03); white-space: nowrap; }
+        .zone-tab.active { background: #2563eb; color: #fff; font-weight: bold; }
 
-    /* 图例说明 */
-    .legend-bar { display: flex; justify-content: flex-end; gap: 15px; font-size: 12px; color: #6b7280; margin-bottom: 12px; }
-    .legend-item { display: flex; align-items: center; gap: 5px; }
-    .dot { width: 10px; height: 10px; border-radius: 50%; }
+        /* 图例说明 */
+        .legend-bar { display: flex; justify-content: flex-end; gap: 15px; font-size: 12px; color: #6b7280; margin-bottom: 12px; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
 
-    /* 桌态网格 */
-    .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .table-card { min-height: 105px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
-    .table-card:active { transform: scale(0.97); }
-    .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
-    .table-name { font-size: 15px; font-weight: bold; }
-    .table-cap { font-size: 11px; opacity: 0.85; }
-    .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
-    .card-body { margin-top: 4px; }
-    .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .status-tag { font-size: 11px; opacity: 0.85; margin-top: 4px; font-weight: 500; }
+        /* 桌态网格 */
+        .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .table-card { min-height: 105px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: transform 0.1s; }
+        .table-card:active { transform: scale(0.97); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .table-name { font-size: 15px; font-weight: bold; }
+        .table-cap { font-size: 11px; opacity: 0.85; }
+        .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
+        .card-body { margin-top: 4px; }
+        .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .status-tag { font-size: 11px; opacity: 0.85; margin-top: 4px; font-weight: 500; }
 
-    /* 色彩规范 */
-    .status-free-bg { background-color: #22c55e; }
-    .status-free { background-color: #dcfce7; color: #15803d; border: 1.5px solid #86efac; }
-    .status-reserved-bg { background-color: #f59e0b; }
-    .status-reserved { background-color: #fef3c7; color: #b45309; border: 1.5px solid #fde047; }
-    .status-occupied-bg { background-color: #ef4444; }
-    .status-occupied { background-color: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
+        /* 色彩规范 */
+        .status-free-bg { background-color: #22c55e; }
+        .status-free { background-color: #dcfce7; color: #15803d; border: 1.5px solid #86efac; }
+        .status-reserved-bg { background-color: #f59e0b; }
+        .status-reserved { background-color: #fef3c7; color: #b45309; border: 1.5px solid #fde047; }
+        .status-occupied-bg { background-color: #ef4444; }
+        .status-occupied { background-color: #fee2e2; color: #b91c1c; border: 1.5px solid #fca5a5; }
 
-    /* 弹窗样式 */
-    .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
-    .modal-mask.hidden { display: none; }
-    .modal-card { width: 90%; max-width: 450px; background: #fff; border-radius: 16px; padding: 20px; max-height: 90vh; overflow-y: auto; }
-    .modal-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .close-btn { cursor: pointer; color: #9ca3af; font-size: 22px; padding: 0 5px; }
+        /* 弹窗样式 */
+        .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+        .modal-mask.hidden { display: none; }
+        .modal-card { width: 90%; max-width: 450px; background: #fff; border-radius: 16px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+        .modal-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .close-btn { cursor: pointer; color: #9ca3af; font-size: 22px; padding: 0 5px; }
 
-    /* 表单与详情 */
-    .form-item { margin-bottom: 12px; }
-    .label { font-size: 13px; color: #374151; font-weight: 500; display: block; margin-bottom: 4px; }
-    .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
-    .textarea { height: 70px; resize: none; }
-    .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
-    .d-label { color: #6b7280; width: 90px; flex-shrink: 0; }
-    .d-value { color: #1f2937; flex-grow: 1; word-break: break-all; }
-    .d-value.phone a { color: #2563eb; font-weight: bold; text-decoration: underline; }
-    .d-value.highlight { color: #d97706; font-weight: 500; }
-    .d-value.warn { color: #dc2626; }
-    .occupied-badge { margin-bottom: 15px; padding: 8px 12px; background: #fee2e2; border-radius: 8px; color: #b91c1c; font-size: 13px; font-weight: bold; text-align: center; }
+        /* 表单与详情 */
+        .form-item { margin-bottom: 12px; }
+        .label { font-size: 13px; color: #374151; font-weight: 500; display: block; margin-bottom: 4px; }
+        .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
+        .textarea { height: 70px; resize: none; }
+        .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
+        .d-label { color: #6b7280; width: 90px; flex-shrink: 0; }
+        .d-value { color: #1f2937; flex-grow: 1; word-break: break-all; }
+        .d-value.phone a { color: #2563eb; font-weight: bold; text-decoration: underline; }
+        .d-value.highlight { color: #d97706; font-weight: 500; }
+        .d-value.warn { color: #dc2626; }
+        .occupied-badge { margin-bottom: 15px; padding: 8px 12px; background: #fee2e2; border-radius: 8px; color: #b91c1c; font-size: 13px; font-weight: bold; text-align: center; }
 
-    /* 按钮组 */
-    .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
-    .action-btn { width: 100%; border: none; border-radius: 8px; font-size: 14px; padding: 12px 0; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
-    .action-btn:active { opacity: 0.8; }
-    .btn-primary { background: #2563eb; color: #fff; }
-    .btn-success { background: #16a34a; color: #fff; }
-    .btn-warning { background: #f59e0b; color: #fff; }
-    .btn-danger { background: #dc2626; color: #fff; }
-  </style>
+        /* 按钮组 */
+        .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
+        .action-btn { width: 100%; border: none; border-radius: 8px; font-size: 14px; padding: 12px 0; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+        .action-btn:active { opacity: 0.8; }
+        .btn-primary { background: #2563eb; color: #fff; }
+        .btn-success { background: #16a34a; color: #fff; }
+        .btn-warning { background: #f59e0b; color: #fff; }
+        .btn-danger { background: #dc2626; color: #fff; }
+    </style>
 </head>
 <body>
 
@@ -323,13 +323,12 @@
     renderGrid();
   }
 
-  // 生成卡片内容（加入实际入座时间展示）
   function getCardBodyHtml(rec) {
     if (rec.status === 'reserved') {
       let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
       return `
         <div class="guest-name">👤 ${rec.guest}</div>
-        <div class="res-time">⏰ 预定: ${rec.time || '未填'}</div>
+        <div class="res-time">⏰ ${rec.time || '已预留'}</div>
         ${extra ? `<div class="res-time">${extra}</div>` : ''}
       `;
     } 
@@ -337,9 +336,8 @@
       let extra = rec.note ? `📝 ${rec.note}` : (rec.menu ? `🍲 ${rec.menu}` : '');
       return `
         <div class="guest-name">👤 ${rec.guest || '用餐中'}</div>
-        <div class="res-time" style="color:#b91c1c; font-weight:bold;">🔥 入座: ${rec.seatedTime || '刚刚'}</div>
+        <div class="res-time">🔥 入座: ${rec.seatedTime || rec.time || '刚刚'}</div>
         ${extra ? `<div class="res-time">${extra}</div>` : ''}
-        <div class="status-tag">就餐中</div>
       `;
     }
     return `<div class="status-tag">点击预订</div>`;
@@ -395,7 +393,7 @@
       return `
         <div class="table-card status-${rec.status}" onclick="openTableModal('${t.id}', '${t.cap}')">
           <div class="card-header">
-            <span class="table-name">${t.id}</span>
+            <span class="table-name">${t.name || t.id}</span>
             <span class="table-cap">${t.cap}</span>
           </div>
           <div class="card-body">${getCardBodyHtml(rec)}</div>
@@ -449,17 +447,12 @@
       body.innerHTML = `
         <div class="detail-row"><span class="d-label">预 留 人：</span><span class="d-value bold">${t.guest}</span></div>
         <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">预定时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
+        <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
         <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
-        <div class="form-item" style="margin-top:15px; border-top:1px solid #f3f4f6; padding-top:12px;">
-          <label class="label" style="color:#b91c1c; font-weight:bold;">入座时间（可手动调整或保持当前时间）</label>
-          <input class="input" id="inputSeatedTime" value="${getCurrentTimeStr()}">
-        </div>
-
         <div class="btn-group">
-          <button class="action-btn btn-success" onclick="updateTableStatus('occupied')">客人已入座</button>
+          <button class="action-btn btn-success" onclick="updateTableStatus('occupied')">客人已入座 (自动记时)</button>
           <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改预定信息</button>
           <button class="action-btn btn-danger" onclick="updateTableStatus('free')">取消预定</button>
         </div>
@@ -472,9 +465,8 @@
         <div class="occupied-badge">🔥 当前处于【就餐中】状态</div>
         <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写备注'}</span></div>
         <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">预定时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">实际入座：</span><span class="d-value" style="color:#b91c1c; font-weight:bold;">${t.seatedTime || '未记录'}</span></div>
-        <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
+        <div class="detail-row"><span class="d-label">入座时间：</span><span class="d-value highlight">${t.seatedTime || t.time || '记录缺失'}</span></div>
+        <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value">${t.menu || '无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
         <div class="btn-group">
@@ -483,14 +475,6 @@
         </div>
       `;
     }
-  }
-
-  // 获取当前时分字符串 (如 "12:45")
-  function getCurrentTimeStr() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2, '0');
-    const m = String(now.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
   }
 
   function saveBooking() {
@@ -518,16 +502,13 @@
     if (status === 'free') {
       delete reservationMap[currentActiveTable.id];
     } else {
-      let seatedTime = currentActiveTable.seatedTime;
-      if (status === 'occupied') {
-        const inputEl = document.getElementById('inputSeatedTime');
-        seatedTime = inputEl ? inputEl.value : getCurrentTimeStr();
-      }
-
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
       reservationMap[currentActiveTable.id] = {
         ...reservationMap[currentActiveTable.id],
         status: status,
-        seatedTime: seatedTime
+        seatedTime: timeStr // 自动记录当前入座几点几分
       };
     }
     saveData();
