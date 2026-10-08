@@ -64,7 +64,7 @@
         /* 弹窗样式 */
         .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
         .modal-mask.hidden { display: none; }
-        .modal-card { width: 90%; max-width: 450px; background: #fff; border-radius: 16px; padding: 20px; max-height: 90vh; overflow-y: auto; }
+        .modal-card { width: 95%; max-width: 500px; background: #fff; border-radius: 16px; padding: 20px; max-height: 90vh; overflow-y: auto; }
         .modal-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
         .close-btn { cursor: pointer; color: #9ca3af; font-size: 22px; padding: 0 5px; }
 
@@ -72,7 +72,14 @@
         .form-item { margin-bottom: 12px; }
         .label { font-size: 13px; color: #374151; font-weight: 500; display: block; margin-bottom: 4px; }
         .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
-        .textarea { height: 70px; resize: none; }
+        
+        /* 菜单点选区样式 */
+        .menu-select-box { background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; }
+        .menu-category-title { font-size: 13px; font-weight: bold; color: #2563eb; margin: 8px 0 4px 0; }
+        .menu-item-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; font-size: 13px; background: #fff; padding: 6px 8px; border-radius: 6px; border: 1px solid #e5e7eb; }
+        .menu-item-row select, .menu-item-row input { font-size: 12px; padding: 3px 6px; border: 1px solid #d1d5db; border-radius: 4px; outline: none; }
+        .selected-dishes-preview { font-size: 12px; color: #d97706; margin-top: 4px; background: #fef3c7; padding: 6px; border-radius: 6px; }
+
         .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
         .d-label { color: #6b7280; width: 90px; flex-shrink: 0; }
         .d-value { color: #1f2937; flex-grow: 1; word-break: break-all; }
@@ -145,11 +152,64 @@
 
 <script>
   /******************************************************************
-   * 云数据库配置
+   * 云数据库配置与菜单配置
    ******************************************************************/
   const BIN_ID = "6ac62506ffd5d1605355a13d";
   const SECRET_KEY = "$2a$10$hGE7gq9vMON78zjVzSkOP.2/jb0MfG9yk6mKkjxgdBjTK8cJiyLIu";
   const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+  // 预设菜单结构：包含主菜、焖煮、炒菜、火锅配料及子选项
+  const MENU_DATA = {
+    "1. 主菜": [
+      { name: "隔水桑拿鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "黑醋鹅", sub: ["1只", "半只", "熟上", "锅上"] },
+      { name: "虾蟹鸡煲", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "隔水蒸鱼(28元/斤)", sub: ["允鱼", "大头鱼"] },
+      { name: "菌菇浸鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "鲍鱼青榄五指毛桃浸鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "陈皮浸鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "夏枯草白豆浸鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "木瓜清补凉浸鸡", sub: ["扇鸡", "大鸡", "small"] }
+    ],
+    "2. 焖煮主菜": [
+      { name: "大盘鱼", sub: ["允鱼", "大头鱼"] },
+      { name: "啫啫鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "大盘鱼加啫鸡", sub: ["①允鱼/大头鱼", "②扇鸡/大鸡/small"] },
+      { name: "大盘菜", sub: [] },
+      { name: "鲍鱼虾炆鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "酸菜炆鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "栗子炆鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "支竹炆鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "酸菜炆鱼", sub: ["允鱼", "大头鱼"] },
+      { name: "虾蟹炆鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "大煲鸡", sub: ["扇鸡", "大鸡", "small"] },
+      { name: "炆鹅", sub: ["土豆炆", "酸菜炆", "栗子炆", "支竹炆"] }
+    ],
+    "3. 炒菜": [
+      { name: "蒜香骨", sub: [] }, { name: "手抓骨", sub: [] }, { name: "无骨沙姜猪手", sub: [] },
+      { name: "泰式脆皮五花肉", sub: [] }, { name: "豉汁蒸排骨", sub: [] }, { name: "豉汁蒸大肠", sub: [] },
+      { name: "肉碎蒸豆腐", sub: [] }, { name: "蒸手打肉丸", sub: [] }, { name: "蒸手打肉饼", sub: [] },
+      { name: "香辣虾", sub: [] }, { name: "水煮牛肉", sub: [] }, { name: "沙姜猪肚", sub: [] },
+      { name: "酸菜炒大肠", sub: [] }, { name: "啫啫排骨", sub: [] }, { name: "啫啫竹肠", sub: [] },
+      { name: "咸鱼茄子煲", sub: [] }, { name: "凉瓜炒牛肉", sub: [] }, { name: "香芋烧腩煲", sub: [] },
+      { name: "啫啫牛肉", sub: [] }, { name: "姜汁糕", sub: [] }, { name: "红枣糕", sub: [] },
+      { name: "凉拌鱼皮", sub: [] }, { name: "蒸水蛋", sub: [] }, { name: "五柳炸蛋", sub: [] },
+      { name: "番茄炒蛋", sub: [] }, { name: "凉瓜炒蛋", sub: [] }, { name: "酸甜排骨", sub: [] },
+      { name: "泰汁茄子", sub: [] }, { name: "煎酿豆腐", sub: [] }, { name: "煎酿三宝", sub: [] },
+      { name: "佛手瓜炒烧肉", sub: [] }
+    ],
+    "4. 火锅配料与加料": [
+      { name: "一只清远鸡", sub: [] }, { name: "猪肉丸", sub: [] }, { name: "猪肚", sub: [] },
+      { name: "排骨段", sub: [] }, { name: "桑拿排骨", sub: [] }, { name: "桑拿竹肠", sub: [] },
+      { name: "火锅面", sub: [] }, { name: "清补凉", sub: [] }, { name: "玉米", sub: [] },
+      { name: "红萝卜", sub: [] }, { name: "佛手瓜", sub: [] }, { name: "酸菜", sub: [] },
+      { name: "虫草花", sub: [] }, { name: "支竹", sub: [] }, { name: "香芋", sub: [] },
+      { name: "木瓜", sub: [] }, { name: "杂菜", sub: [] }, { name: "鱼皮角", sub: [] },
+      { name: "牛肉丸", sub: [] }, { name: "桑拿牛肉", sub: [] }, { name: "鱼料", sub: [] },
+      { name: "配料", sub: [] }, { name: "蒜段", sub: [] }, { name: "蕃薯", sub: [] },
+      { name: "白萝卜", sub: [] }
+    ]
+  };
 
   const largeTables = [
     '③', '④', '⑦', '⑧',
@@ -161,33 +221,12 @@
   const getCap = (id) => largeTables.includes(id) ? '10人' : '6人左右';
 
   const ZONES = [
-    {
-      name: '收银台旁边',
-      tables: ['①','②','③','④','⑤','⑥','⑦','⑧'].map(id => ({ id, cap: getCap(id) }))
-    },
-    {
-      name: '旧厅',
-      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 1}号`, cap: getCap(`${i + 1}号`) }))
-    },
-    {
-      name: '新厅',
-      tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 19}号`, cap: getCap(`${i + 19}号`) }))
-    },
-    {
-      name: '包厢',
-      tables: [
-        '大饭堂-饭1', '大饭堂-饭2', '大饭堂-饭3',
-        '知青包厢', '生产队包厢', '合作社包厢', '联队包厢', '人民公社包厢'
-      ].map(id => ({ id, cap: getCap(id) }))
-    },
-    {
-      name: '外棚',
-      tables: Array.from({ length: 8 }, (_, i) => ({ id: `外${i + 1}`, cap: getCap(`外${i + 1}`) }))
-    },
-    {
-      name: '户外花园',
-      tables: Array.from({ length: 4 }, (_, i) => ({ id: `${i + 37}号`, cap: getCap(`${i + 37}号`) }))
-    }
+    { name: '收银台旁边', tables: ['①','②','③','④','⑤','⑥','⑦','⑧'].map(id => ({ id, cap: getCap(id) })) },
+    { name: '旧厅', tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 1}号`, cap: getCap(`${i + 1}号`) })) },
+    { name: '新厅', tables: Array.from({ length: 18 }, (_, i) => ({ id: `${i + 19}号`, cap: getCap(`${i + 19}号`) })) },
+    { name: '包厢', tables: ['大饭堂-饭1', '大饭堂-饭2', '大饭堂-饭3', '知青包厢', '生产队包厢', '合作社包厢', '联队包厢', '人民公社包厢'].map(id => ({ id, cap: getCap(id) })) },
+    { name: '外棚', tables: Array.from({ length: 8 }, (_, i) => ({ id: `外${i + 1}`, cap: getCap(`外${i + 1}`) })) },
+    { name: '户外花园', tables: Array.from({ length: 4 }, (_, i) => ({ id: `${i + 37}号`, cap: getCap(`${i + 37}号`) })) }
   ];
 
   let currentMeal = 'lunch';
@@ -203,7 +242,6 @@
     document.getElementById('datePicker').addEventListener('change', (e) => {
       selectedDate = e.target.value;
       updateCurrentReservationMap();
-      renderGrid();
     });
 
     renderZones();
@@ -221,16 +259,10 @@
   };
 
   function startSync() {
-    if (!syncTimer) {
-      syncTimer = setInterval(loadData, 15000);
-    }
+    if (!syncTimer) syncTimer = setInterval(loadData, 15000);
   }
-
   function stopSync() {
-    if (syncTimer) {
-      clearInterval(syncTimer);
-      syncTimer = null;
-    }
+    if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
   }
 
   function updateSyncStatus(isOnline, message) {
@@ -242,20 +274,17 @@
 
   async function loadData() {
     try {
-      const res = await fetch(`${API_URL}/latest`, {
-        headers: { 'X-Master-Key': SECRET_KEY }
-      });
+      const res = await fetch(`${API_URL}/latest`, { headers: { 'X-Master-Key': SECRET_KEY } });
       if (res.ok) {
         const result = await res.json();
         globalAllData = result.record || {};
         updateSyncStatus(true, "全店实时同步中 (每15秒刷新)");
       } else {
-        updateSyncStatus(false, "云端连接失败，请检查网络");
+        updateSyncStatus(false, "云端连接失败");
       }
     } catch (err) {
       updateSyncStatus(false, "网络异常，无法连接云端");
     }
-
     updateCurrentReservationMap();
   }
 
@@ -273,10 +302,7 @@
     try {
       await fetch(API_URL, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Master-Key': SECRET_KEY
-        },
+        headers: { 'Content-Type': 'application/json', 'X-Master-Key': SECRET_KEY },
         body: JSON.stringify(globalAllData)
       });
       updateSyncStatus(true, "更改已成功同步至全店");
@@ -307,18 +333,13 @@
   function renderZones() {
     const bar = document.getElementById('zoneBar');
     bar.innerHTML = ZONES.map((zone, idx) => `
-      <div class="zone-tab ${idx === currentZoneIndex ? 'active' : ''}" onclick="switchZone(${idx})">
-        ${zone.name}
-      </div>
+      <div class="zone-tab ${idx === currentZoneIndex ? 'active' : ''}" onclick="switchZone(${idx})">${zone.name}</div>
     `).join('');
   }
 
   function switchZone(idx) {
     currentZoneIndex = idx;
-    if (document.getElementById('searchInput').value) {
-      clearSearch();
-      return;
-    }
+    if (document.getElementById('searchInput').value) { clearSearch(); return; }
     renderZones();
     renderGrid();
   }
@@ -349,14 +370,11 @@
 
     if (keyword !== '') {
       let matchedTables = [];
-
       ZONES.forEach(zone => {
         zone.tables.forEach(t => {
           const rec = reservationMap[t.id] || { status: 'free' };
           if (rec.status !== 'free') {
-            const guestMatch = rec.guest && rec.guest.toLowerCase().includes(keyword);
-            const phoneMatch = rec.phone && rec.phone.toLowerCase().includes(keyword);
-            if (guestMatch || phoneMatch) {
+            if ((rec.guest && rec.guest.toLowerCase().includes(keyword)) || (rec.phone && rec.phone.toLowerCase().includes(keyword))) {
               matchedTables.push({ ...t, zoneName: zone.name, rec });
             }
           }
@@ -364,21 +382,14 @@
       });
 
       if (matchedTables.length === 0) {
-        grid.innerHTML = `
-          <div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">
-            🔍 未搜索到包含“<b style="color:#1f2937">${keyword}</b>”的预订记录
-          </div>
-        `;
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">🔍 未搜索到相关预订</div>`;
         return;
       }
 
       grid.innerHTML = matchedTables.map(item => `
         <div class="table-card status-${item.rec.status}" onclick="openTableModal('${item.id}', '${item.cap}')">
           <div class="card-header">
-            <div>
-              <span class="table-name">${item.id}</span>
-              <div><span class="search-zone-badge">${item.zoneName}</span></div>
-            </div>
+            <div><span class="table-name">${item.id}</span><div><span class="search-zone-badge">${item.zoneName}</span></div></div>
             <span class="table-cap">${item.cap}</span>
           </div>
           <div class="card-body">${getCardBodyHtml(item.rec)}</div>
@@ -392,10 +403,7 @@
       const rec = reservationMap[t.id] || { status: 'free' };
       return `
         <div class="table-card status-${rec.status}" onclick="openTableModal('${t.id}', '${t.cap}')">
-          <div class="card-header">
-            <span class="table-name">${t.name || t.id}</span>
-            <span class="table-cap">${t.cap}</span>
-          </div>
+          <div class="card-header"><span class="table-name">${t.id}</span><span class="table-cap">${t.cap}</span></div>
           <div class="card-body">${getCardBodyHtml(rec)}</div>
         </div>
       `;
@@ -405,7 +413,6 @@
   function openTableModal(id, cap) {
     const rec = reservationMap[id] || { status: 'free' };
     currentActiveTable = { id, cap, ...rec };
-    
     document.getElementById('modalTableTitle').innerText = `${id} (${cap}) 详情`;
     renderModalBody(false);
     document.getElementById('modalMask').classList.remove('hidden');
@@ -417,6 +424,31 @@
 
     if (t.status === 'free' || isEditing) {
       const defaultTime = currentMeal === 'lunch' ? '12:30' : '18:00';
+      
+      // 生成菜单点选HTML
+      let menuHtml = '';
+      for (let category in MENU_DATA) {
+        menuHtml += `<div class="menu-category-title">${category}</div>`;
+        MENU_DATA[category].forEach(dish => {
+          let subSelectHtml = '';
+          if (dish.sub && dish.sub.length > 0) {
+            subSelectHtml = `<select class="dish-sub-select" data-dish="${dish.name}">` + 
+              dish.sub.map(s => `<option value="${s}">${s === 'small' ? '小鸡' : s}</option>`).join('') + 
+              `</select>`;
+          }
+          menuHtml += `
+            <div class="menu-item-row">
+              <label style="display:flex; align-items:center; gap:6px; flex-grow:1; cursor:pointer;">
+                <input type="checkbox" class="dish-checkbox" value="${dish.name}" onchange="updateMenuPreview()">
+                <span>${dish.name}</span>
+              </label>
+              ${subSelectHtml}
+              <input type="number" class="dish-qty" min="1" value="1" style="width:45px;" placeholder="份数"> 份
+            </div>
+          `;
+        });
+      }
+
       body.innerHTML = `
         <div class="form-item">
           <label class="label">客人备注名*</label>
@@ -431,24 +463,33 @@
           <input class="input" id="inputTime" value="${t.time || defaultTime}">
         </div>
         <div class="form-item">
-          <label class="label">提前点菜菜品</label>
-          <textarea class="textarea" id="inputMenu" placeholder="填写提前点好的菜品清单...">${t.menu || ''}</textarea>
+          <label class="label">选择预点菜品（勾选并选择规格/份数）</label>
+          <div class="menu-select-box">${menuHtml}</div>
+          <div class="selected-dishes-preview" id="dishPreview">已选菜品：无</div>
+          <input type="hidden" id="inputMenu" value="${t.menu || ''}">
         </div>
         <div class="form-item">
           <label class="label">其他特殊备注</label>
-          <input class="input" id="inputNote" placeholder="如: 需宝宝椅、靠窗、准备发票等" value="${t.note || ''}">
+          <input class="input" id="inputNote" placeholder="如: 需宝宝椅、靠窗等" value="${t.note || ''}">
         </div>
         <button class="action-btn btn-primary" onclick="saveBooking()">保存预定信息</button>
       `;
+      
+      // 如果原本有菜单，尝试反向勾选或直接填充预览
+      setTimeout(() => {
+        if (t.menu) {
+          document.getElementById('dishPreview').innerText = `已选菜品：${t.menu}`;
+        }
+      }, 50);
       return;
     }
 
     if (t.status === 'reserved') {
       body.innerHTML = `
         <div class="detail-row"><span class="d-label">预 留 人：</span><span class="d-value bold">${t.guest}</span></div>
-        <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
+        <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击拨打)</a>` : '未填写'}</span></div>
         <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
+        <div class="detail-row"><span class="d-label">预点菜品：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
         <div class="btn-group">
@@ -463,10 +504,10 @@
     if (t.status === 'occupied') {
       body.innerHTML = `
         <div class="occupied-badge">🔥 当前处于【就餐中】状态</div>
-        <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写备注'}</span></div>
-        <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">入座时间：</span><span class="d-value highlight">${t.seatedTime || t.time || '记录缺失'}</span></div>
-        <div class="detail-row"><span class="d-label">提前点菜：</span><span class="d-value">${t.menu || '无预点菜品'}</span></div>
+        <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写'}</span></div>
+        <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击拨打)</a>` : '未填写'}</span></div>
+        <div class="detail-row"><span class="d-label">入座时间：</span><span class="d-value highlight">${t.seatedTime || t.time || '刚刚'}</span></div>
+        <div class="detail-row"><span class="d-label">预点菜品：</span><span class="d-value highlight">${t.menu || '无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
         <div class="btn-group">
@@ -477,12 +518,25 @@
     }
   }
 
+  function updateMenuPreview() {
+    let selected = [];
+    document.querySelectorAll('.dish-checkbox:checked').forEach(chk => {
+      let dishName = chk.value;
+      let row = chk.closest('.menu-item-row');
+      let subSelect = row.querySelector('.dish-sub-select');
+      let qtyInput = row.querySelector('.dish-qty');
+      let subVal = subSelect ? `[${subSelect.value}]` : '';
+      let qtyVal = qtyInput ? `${qtyInput.value}份` : '1份';
+      selected.push(`${dishName}${subVal}${qtyVal}`);
+    });
+    let resultStr = selected.join('、');
+    document.getElementById('dishPreview').innerText = resultStr ? `已选菜品：${resultStr}` : '已选菜品：无';
+    document.getElementById('inputMenu').value = resultStr;
+  }
+
   function saveBooking() {
     const guest = document.getElementById('inputGuest').value.trim();
-    if (!guest) {
-      alert('请填写预订人姓名或备注');
-      return;
-    }
+    if (!guest) { alert('请填写预订人姓名或备注'); return; }
 
     reservationMap[currentActiveTable.id] = {
       status: currentActiveTable.status === 'occupied' ? 'occupied' : 'reserved',
@@ -504,11 +558,10 @@
     } else {
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-      
       reservationMap[currentActiveTable.id] = {
         ...reservationMap[currentActiveTable.id],
         status: status,
-        seatedTime: timeStr // 自动记录当前入座几点几分
+        seatedTime: timeStr
       };
     }
     saveData();
