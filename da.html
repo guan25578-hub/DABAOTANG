@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -22,7 +22,7 @@
         .search-input:focus { border-color: #2563eb; }
         .clear-search-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: #e5e7eb; color: #4b5563; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* 云端同步指示灯与手动刷新按钮 */
+        /* 云端同步指示灯与高效率工具栏 */
         .sync-status { font-size: 11px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
         .status-left { display: flex; align-items: center; gap: 6px; }
         .sync-dot { width: 8px; height: 8px; border-radius: 50%; background-color: #9ca3af; display: inline-block; }
@@ -72,6 +72,14 @@
         .summary-stats-bar { background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; justify-content: space-around; align-items: center; text-align: center; }
         .stat-item .num { font-size: 20px; font-weight: bold; color: #2563eb; }
         .stat-item .label { font-size: 12px; color: #6b7280; margin-top: 2px; }
+        
+        /* 当餐菜品汇总卡片 */
+        .summary-dish-card { background: #fff; border-radius: 12px; padding: 14px 16px; border: 1.5px solid #dbeafe; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .summary-dish-title { font-size: 15px; font-weight: bold; color: #1e40af; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 6px; }
+        .summary-dish-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .summary-dish-tag { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 6px 12px; border-radius: 8px; font-size: 13px; color: #166534; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+        .summary-dish-tag .dish-qty { background: #166534; color: #fff; padding: 1px 7px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+
         .summary-card { background: #fff; border-radius: 12px; padding: 14px; border: 1.5px solid #e5e7eb; box-shadow: 0 2px 6px rgba(0,0,0,0.03); cursor: pointer; transition: border-color 0.2s; }
         .summary-card:hover { border-color: #2563eb; }
         .summary-card-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f3f4f6; padding-bottom: 8px; margin-bottom: 10px; }
@@ -148,8 +156,8 @@
       <span id="syncText">云端连接中...</span>
     </div>
     <div style="display:flex; align-items:center; gap:8px;">
-      <button class="refresh-btn" onclick="loadData()">🔄 手动刷新</button>
-      <span class="bin-info">7天自动清理</span>
+      <button class="refresh-btn" onclick="manualRefresh()">🔄 手动刷新</button>
+      <span class="bin-info">极省额度模式</span>
     </div>
   </div>
 
@@ -299,7 +307,7 @@
       updateCurrentReservationMap();
     });
 
-    // 监测用户触摸或操作，恢复高效率轮询
+    // 监测员工触摸或点击行为，唤醒高效率同步
     ['touchstart', 'click', 'mousemove', 'scroll'].forEach(evt => {
       document.addEventListener(evt, () => {
         lastInteractTime = Date.now();
@@ -308,13 +316,13 @@
     });
 
     renderZones();
-    loadLocalCache(); // 1. 优先加载本地缓存，秒开防闪白
+    loadLocalCache(); // 1. 优先使用本地缓存瞬间切出界面，不耗额度
     loadData();
     startSync();
 
     document.addEventListener("visibilitychange", function() {
       if (document.hidden) {
-        stopSync();
+        stopSync(); // 切后台或关屏彻底关闭定时器
       } else {
         loadData();
         startSync();
@@ -322,18 +330,19 @@
     });
   };
 
-  // 智能无操作休眠机制：2分钟无人操作自动休眠，省云端额度
+  // 1. 智能休眠（1分钟不操作或离屏自动停用轮询，极省 API 额度）
   function startSync() {
     stopSync();
     syncTimer = setInterval(() => {
-      if (Date.now() - lastInteractTime > 120000) {
+      // 超过1分钟无触屏操作，自动进入休眠
+      if (Date.now() - lastInteractTime > 60000) {
         updateSyncStatus(true, "休眠中 (点击屏幕恢复同步)");
         stopSync();
         return;
       }
       if (document.hidden || currentActiveTable) return;
       loadData();
-    }, 45000); // 调优为 45 秒超长低消耗轮询
+    }, 60000); // 后台轮询间隔拉长至 60 秒/次
   }
 
   function stopSync() {
@@ -355,6 +364,11 @@
         updateCurrentReservationMap();
       }
     } catch(e) {}
+  }
+
+  async function manualRefresh() {
+    updateSyncStatus(true, "正在手动获取最新数据...");
+    await loadData();
   }
 
   async function loadData() {
@@ -382,7 +396,7 @@
     renderGrid();
   }
 
-  // 2. 自动清理超过 7 天前的过期历史数据（大大减轻服务器数据量）
+  // 2. 自动清洗超过 7 天的历史垃圾数据（节省网络 Payload）
   function cleanOldData() {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -405,7 +419,7 @@
     const key = `RES_${selectedDate}_${currentMeal}`;
     globalAllData[key] = updatedMap || reservationMap;
 
-    cleanOldData(); // 保存前清洗老旧无用数据
+    cleanOldData();
 
     try { localStorage.setItem('dbt_global_data', JSON.stringify(globalAllData)); } catch(e){}
     renderGrid(); 
@@ -466,7 +480,7 @@
     renderGrid();
   }
 
-  // 3. 严格限定当餐关联：同日期、同餐市（午/晚），同姓名 AND 同电话校验
+  // 3. 当餐同名+同电话精准跨区查重
   function getOtherTablesForGuest(rec, currentTableId) {
     if (!rec || !rec.guest || !rec.guest.trim()) return [];
     const currentGuest = rec.guest.trim();
@@ -581,12 +595,12 @@
     }).join('');
   }
 
-  // 渲染整版当餐全店汇总看板
+  // 渲染当餐全店汇总看板（含菜品数量汇总，移除人数统计）
   function renderSummaryBoard(container) {
     let bookedTables = [];
-    let totalPeople = 0;
     let totalReserved = 0;
     let totalOccupied = 0;
+    let dishSummaryMap = {}; // 存储当餐菜品总汇统计
 
     Object.keys(reservationMap).forEach(tId => {
       let rec = reservationMap[tId];
@@ -597,7 +611,25 @@
 
         if (rec.status === 'reserved') totalReserved++;
         if (rec.status === 'occupied') totalOccupied++;
-        if (rec.pcount) totalPeople += parseInt(rec.pcount) || 0;
+
+        // 智能解析并累加本桌菜单
+        if (rec.menu && rec.menu.trim()) {
+          let lines = rec.menu.split('\n');
+          lines.forEach(line => {
+            let trimmed = line.trim();
+            if (!trimmed) return;
+            
+            // 正则匹配类似 "黑醋鹅(1只) x3" 或 "[起片] 隔水桑拿鸡(扇鸡) ×2"
+            let match = trimmed.match(/^(.*?)\s*[xX×]\s*(\d+)$/);
+            if (match) {
+              let dishName = match[1].trim();
+              let qty = parseInt(match[2], 10) || 1;
+              dishSummaryMap[dishName] = (dishSummaryMap[dishName] || 0) + qty;
+            } else {
+              dishSummaryMap[trimmed] = (dishSummaryMap[trimmed] || 0) + 1;
+            }
+          });
+        }
       }
     });
 
@@ -605,16 +637,13 @@
 
     const mealName = currentMeal === 'lunch' ? '🌞 午市' : '🌙 晚市';
 
+    // 1. 顶部统计栏（已移除人数汇总）
     let html = `
       <div class="summary-wrapper">
         <div class="summary-stats-bar">
           <div class="stat-item">
             <div class="num">${bookedTables.length} 桌</div>
-            <div class="label">当前预订/就餐桌数</div>
-          </div>
-          <div class="stat-item">
-            <div class="num">${totalPeople} 人</div>
-            <div class="label">预订总人数</div>
+            <div class="label">预订/就餐总桌数</div>
           </div>
           <div class="stat-item">
             <div class="num" style="color:#d97706;">${totalReserved} 桌</div>
@@ -627,9 +656,36 @@
         </div>
     `;
 
+    // 2. 菜品汇总统计卡片面板
+    let dishKeys = Object.keys(dishSummaryMap);
+    if (dishKeys.length > 0) {
+      let dishItemsHtml = dishKeys.map(dish => `
+        <div class="summary-dish-tag">
+          <span class="dish-name">${dish}</span>
+          <span class="dish-qty">× ${dishSummaryMap[dish]}</span>
+        </div>
+      `).join('');
+
+      html += `
+        <div class="summary-dish-card">
+          <div class="summary-dish-title">🍲 ${selectedDate} ${mealName} 预点菜品总汇</div>
+          <div class="summary-dish-grid">
+            ${dishItemsHtml}
+          </div>
+        </div>
+      `;
+    } else {
+      html += `
+        <div class="summary-dish-card" style="color:#9ca3af; text-align:center; font-size:13px;">
+          🍲 当前餐次暂无预点菜品统计
+        </div>
+      `;
+    }
+
+    // 3. 无预订记录提示
     if (bookedTables.length === 0) {
       html += `
-        <div style="text-align: center; padding: 50px 0; background: #fff; border-radius: 12px; color: #9ca3af;">
+        <div style="text-align: center; padding: 40px 0; background: #fff; border-radius: 12px; color: #9ca3af;">
           🎉 ${selectedDate} ${mealName} 暂无任何预订或用餐桌位
         </div>
       </div>`;
@@ -637,6 +693,7 @@
       return;
     }
 
+    // 4. 详细订单卡片
     bookedTables.forEach(t => {
       let statusTag = t.status === 'occupied' ? 
         `<span class="summary-tag status-occupied">🔥 就餐中</span>` : 
@@ -1096,7 +1153,7 @@
   async function closeModal() {
     document.getElementById('modalMask').classList.add('hidden');
     currentActiveTable = null;
-    loadData();
+    renderGrid(); // 关闭弹窗仅刷新本地界面，不发请求
   }
 </script>
 
