@@ -42,14 +42,16 @@
 
         /* 桌态网格 —— 固定卡片高度，保持格式绝对整齐 */
         .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .table-card { height: 125px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.1s; }
+        .table-card { height: 125px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.1s; position: relative; }
         .table-card:active { transform: scale(0.97); }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .table-name { font-size: 15px; font-weight: bold; }
         .table-cap { font-size: 11px; opacity: 0.85; }
         .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
         
-        /* 卡片内部文本溢出省略 */
+        /* 锁定角标提示 */
+        .lock-badge { position: absolute; top: 0; right: 0; background: #dc2626; color: #fff; font-size: 10px; padding: 2px 6px; border-bottom-left-radius: 8px; font-weight: bold; }
+
         .card-body { margin-top: 4px; overflow: hidden; }
         .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -125,7 +127,7 @@
       <span class="sync-dot" id="syncDot"></span>
       <span id="syncText">正在连接云端看板...</span>
     </div>
-    <span class="bin-info" id="binInfoDisplay">云端已就绪</span>
+    <span class="bin-info" id="binInfoDisplay">云端防冲突锁定已开启</span>
   </div>
 
   <!-- 区域切换 Tab -->
@@ -158,14 +160,21 @@
   const SECRET_KEY = "$2a$10$hGE7gq9vMON78zjVzSkOP.2/jb0MfG9yk6mKkjxgdBjTK8cJiyLIu";
   const API_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
+  // 自动生成一个当前浏览器的唯一身份 ID（用来区分是哪个员工在编辑）
+  let myClientId = localStorage.getItem('dbt_client_id');
+  if (!myClientId) {
+    myClientId = '设备_' + Math.random().toString(36).substr(2, 4);
+    localStorage.setItem('dbt_client_id', myClientId);
+  }
+
   const MENU_CATEGORIES = [
     {
       category: "1. 主菜",
       items: [
-        { name: "隔水桑拿鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "隔水桑拿鸡", subs: ["扇鸡", "大鸡", "小鸡"], hasCutStyle: true },
         { name: "黑醋鹅", subs: ["1只", "半只", "熟上", "锅上"] },
         { name: "虾蟹鸡煲", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "隔水蒸鱼(28元/斤)", subs: ["允鱼", "大头鱼"] },
+        { name: "隔水蒸鱼(28元/斤)", subs: ["允鱼", "大头鱼"], isFish: true },
         { name: "菌菇浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "鲍鱼青榄五指毛桃浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "陈皮浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
@@ -176,15 +185,15 @@
     {
       category: "3. 焖煮主菜",
       items: [
-        { name: "大盘鱼", subs: ["允鱼", "大头鱼"] },
+        { name: "大盘鱼", subs: ["允鱼", "大头鱼"], isFish: true },
         { name: "啫啫鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
-        { name: "大盘鱼加啫鸡", subs: ["①允鱼", "①大头鱼", "②扇鸡", "②大鸡"] },
+        { name: "大盘鱼加啫鸡", subs: ["①允鱼", "①大头鱼", "②扇鸡", "②大鸡"], isFish: true },
         { name: "大盘菜", subs: ["标准"] },
         { name: "鲍鱼虾炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "酸菜炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "栗子炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "支竹炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
-        { name: "酸菜炆鱼", subs: ["允鱼", "大头鱼"] },
+        { name: "酸菜炆鱼", subs: ["允鱼", "大头鱼"], isFish: true },
         { name: "虾蟹炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "大煲鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "炆鹅", subs: ["土豆炆", "酸菜炆", "栗子炆", "支竹炆"] }
@@ -268,6 +277,13 @@
     loadData();
     startSync();
 
+    // 页面关闭或刷新时，如果当前持有锁，尝试释放
+    window.addEventListener('beforeunload', function() {
+      if (currentActiveTable) {
+        releaseLock(currentActiveTable.id);
+      }
+    });
+
     document.addEventListener("visibilitychange", function() {
       if (document.hidden) {
         stopSync();
@@ -316,9 +332,9 @@
     renderGrid();
   }
 
-  async function saveData() {
+  async function saveData(updatedMap) {
     const key = `RES_${selectedDate}_${currentMeal}`;
-    globalAllData[key] = reservationMap;
+    globalAllData[key] = updatedMap || reservationMap;
     renderGrid(); 
 
     try {
@@ -331,6 +347,54 @@
     } catch (err) {
       alert("提交失败，请检查手机网络！");
     }
+  }
+
+  // 检查锁是否过期（超过3分钟算失效）
+  function isLockValid(lockInfo) {
+    if (!lockInfo) return false;
+    const now = new Date().getTime();
+    return (now - lockInfo.time) < 180000; // 3分钟
+  }
+
+  async function acquireLock(tableId) {
+    await loadData(); // 重新拉取最新数据
+    const key = `RES_${selectedDate}_${currentMeal}`;
+    reservationMap = globalAllData[key] || {};
+    
+    const rec = reservationMap[tableId] || { status: 'free' };
+    
+    // 如果别人加了锁且没过期，且不是自己加的
+    if (rec.lock && isLockValid(rec.lock) && rec.lock.client !== myClientId) {
+      return { success: false, editor: rec.lock.client };
+    }
+
+    // 成功获取锁
+    rec.lock = { client: myClientId, time: new Date().getTime() };
+    reservationMap[tableId] = rec;
+    await saveData(reservationMap);
+    return { success: true };
+  }
+
+  async function releaseLock(tableId) {
+    if (!tableId) return;
+    try {
+      const res = await fetch(`${API_URL}/latest`, { headers: { 'X-Master-Key': SECRET_KEY } });
+      if (res.ok) {
+        const result = await res.json();
+        let freshData = result.record || {};
+        const key = `RES_${selectedDate}_${currentMeal}`;
+        let freshMap = freshData[key] || {};
+        if (freshMap[tableId] && freshMap[tableId].lock && freshMap[tableId].lock.client === myClientId) {
+          delete freshMap[tableId].lock;
+          freshData[key] = freshMap;
+          await fetch(API_URL, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'X-Master-Key': SECRET_KEY },
+            body: JSON.stringify(freshData)
+          });
+        }
+      }
+    } catch(e) {}
   }
 
   function onSearchInput() {
@@ -369,7 +433,6 @@
     renderGrid();
   }
 
-  // 检查该客人在当前餐次还订了其他什么桌子（跨桌关联）
   function getOtherTablesForGuest(guestName, currentTableId) {
     if (!guestName) return [];
     let others = [];
@@ -387,28 +450,31 @@
   function getCardBodyHtml(rec, tableId) {
     let otherTables = getOtherTablesForGuest(rec.guest, tableId);
     let linkedText = otherTables.length > 0 ? `<div class="res-time" style="color:#d97706; font-weight:bold;">🔗 另定: ${otherTables.join(', ')}号</div>` : '';
+    let lockBadgeHtml = (rec.lock && isLockValid(rec.lock)) ? `<div class="lock-badge">🔒 ${rec.lock.client === myClientId ? '我' : '他人'}编辑中</div>` : '';
     
+    let content = '';
     if (rec.status === 'reserved') {
       let menuSummary = rec.menu ? `🍲 ${rec.menu.replace(/\n/g, ' / ')}` : '';
       let pCount = rec.pcount ? `👥 ${rec.pcount}人` : '';
-      return `
+      content = `
         <div class="guest-name">👤 ${rec.guest} ${pCount}</div>
         <div class="res-time">⏰ ${rec.time || '已预留'}</div>
         ${linkedText}
         <div class="res-time" style="color:#2563eb;">${menuSummary || (rec.note ? '📝 ' + rec.note : '')}</div>
       `;
-    } 
-    if (rec.status === 'occupied') {
+    } else if (rec.status === 'occupied') {
       let menuSummary = rec.menu ? `🍲 ${rec.menu.replace(/\n/g, ' / ')}` : '';
       let pCount = rec.pcount ? `👥 ${rec.pcount}人` : '';
-      return `
+      content = `
         <div class="guest-name">👤 ${rec.guest || '用餐中'} ${pCount}</div>
         <div class="res-time">🔥 入座: ${rec.seatedTime || rec.time || '刚刚'}</div>
         ${linkedText}
         <div class="res-time" style="color:#2563eb;">${menuSummary || (rec.note ? '📝 ' + rec.note : '')}</div>
       `;
+    } else {
+      content = `<div class="status-tag">点击预订</div>`;
     }
-    return `<div class="status-tag">点击预订</div>`;
+    return lockBadgeHtml + content;
   }
 
   function renderGrid() {
@@ -434,7 +500,7 @@
       }
 
       grid.innerHTML = matchedTables.map(item => `
-        <div class="table-card status-${item.rec.status}" onclick="openTableModal('${item.id}', '${item.cap}')">
+        <div class="table-card status-${item.rec.status}" onclick="tryOpenTableModal('${item.id}', '${item.cap}')">
           <div class="card-header">
             <div><span class="table-name">${item.id}</span><div><span class="search-zone-badge">${item.zoneName}</span></div></div>
             <span class="table-cap">${item.cap}</span>
@@ -449,7 +515,7 @@
     grid.innerHTML = tables.map(t => {
       const rec = reservationMap[t.id] || { status: 'free' };
       return `
-        <div class="table-card status-${rec.status}" onclick="openTableModal('${t.id}', '${t.cap}')">
+        <div class="table-card status-${rec.status}" onclick="tryOpenTableModal('${t.id}', '${t.cap}')">
           <div class="card-header"><span class="table-name">${t.id}</span><span class="table-cap">${t.cap}</span></div>
           <div class="card-body">${getCardBodyHtml(rec, t.id)}</div>
         </div>
@@ -457,7 +523,14 @@
     }).join('');
   }
 
-  function openTableModal(id, cap) {
+  async function tryOpenTableModal(id, cap) {
+    // 尝试加锁
+    const lockResult = await acquireLock(id);
+    if (!lockResult.success) {
+      alert(`⚠️ 无法编辑：该桌台目前正在由 [${lockResult.editor}] 进行编辑操作，请稍候再试！`);
+      return;
+    }
+
     const rec = reservationMap[id] || { status: 'free' };
     currentActiveTable = { id, cap, ...rec };
     document.getElementById('modalTableTitle').innerText = `${id} (${cap}) 详情`;
@@ -477,14 +550,28 @@
         menuHtml += `<div class="menu-category-title">${cat.category}</div>`;
         cat.items.forEach((item, iIdx) => {
           let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
+          
+          let extraSelectHtml = '';
+          if (item.hasCutStyle) {
+            extraSelectHtml = `
+              <select class="menu-sub-select m-cut" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="checkChickenAndFishLink()" style="background:#fef3c7; color:#b45309; font-weight:bold;">
+                <option value="起片">起片</option>
+                <option value="斩件">斩件</option>
+              </select>
+            `;
+          }
+
+          let fishAttr = item.isFish ? `data-is-fish="1"` : '';
+
           menuHtml += `
-            <div class="menu-item-row">
+            <div class="menu-item-row" ${fishAttr}>
               <span class="menu-item-name">
                 <input type="checkbox" class="m-chk" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="toggleMenuRow(${cIdx}, ${iIdx})" style="margin-right:6px;">
                 ${item.name}
               </span>
               <div id="m_controls_${cIdx}_${iIdx}" style="display:none; align-items:center;">
-                <select class="menu-sub-select m-sub" data-cidx="${cIdx}" data-iidx="${iIdx}">${subOptions}</select>
+                ${extraSelectHtml}
+                <select class="menu-sub-select m-sub" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="checkChickenAndFishLink()">${subOptions}</select>
                 <input type="number" class="menu-qty-input m-qty" data-cidx="${cIdx}" data-iidx="${iIdx}" value="1" min="1">
                 <button type="button" onclick="addSameMenu(${cIdx}, ${iIdx})" style="background:#e5e7eb; border:none; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:4px; cursor:pointer;" title="点两份同菜不同做法">+同款</button>
               </div>
@@ -572,6 +659,33 @@
       controls.style.display = 'none';
       document.getElementById(`extra_rows_${cIdx}_${iIdx}`).innerHTML = '';
     }
+    checkChickenAndFishLink();
+  }
+
+  function checkChickenAndFishLink() {
+    let chickenIsQiPian = false;
+    let hasChicken = false;
+    let hasFish = false;
+
+    document.querySelectorAll('.m-chk:checked').forEach(chk => {
+      const cIdx = chk.dataset.cidx;
+      const iIdx = chk.dataset.iidx;
+      const item = MENU_CATEGORIES[cIdx].items[iIdx];
+      if (item.name === "隔水桑拿鸡") {
+        hasChicken = true;
+        const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+        if (cutSel && cutSel.value === "起片") {
+          chickenIsQiPian = true;
+        }
+      }
+    });
+
+    document.querySelectorAll('.m-chk:checked').forEach(chk => {
+      const row = chk.closest('.menu-item-row');
+      if (row && row.dataset.isFish === "1") {
+        hasFish = true;
+      }
+    });
   }
 
   function addSameMenu(cIdx, iIdx) {
@@ -579,23 +693,66 @@
     const extraContainer = document.getElementById(`extra_rows_${cIdx}_${iIdx}`);
     let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
     
+    let extraCutHtml = '';
+    if (item.hasCutStyle) {
+      extraCutHtml = `
+        <select class="menu-sub-select extra-cut" style="background:#fef3c7; color:#b45309; font-weight:bold;">
+          <option value="起片">起片</option>
+          <option value="斩件">斩件</option>
+        </select>
+      `;
+    }
+
     const div = document.createElement('div');
     div.style.cssText = "display:flex; justify-content:flex-end; align-items:center; margin-top:4px;";
     div.innerHTML = `
       <span style="font-size:12px; color:#6b7280; margin-right:6px;">[另加做法]</span>
+      ${extraCutHtml}
       <select class="menu-sub-select extra-sub" data-cidx="${cIdx}" data-iidx="${iIdx}">${subOptions}</select>
       <input type="number" class="menu-qty-input extra-qty" data-cidx="${cIdx}" data-iidx="${iIdx}" value="1" min="1">
-      <button type="button" onclick="this.parentElement.remove()" style="background:#fee2e2; color:#dc2626; border:none; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:4px; cursor:pointer;">删除</button>
+      <button type="button" onclick="this.parentElement.remove(); checkChickenAndFishLink();" style="background:#fee2e2; color:#dc2626; border:none; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:4px; cursor:pointer;">删除</button>
     `;
     extraContainer.appendChild(div);
+    checkChickenAndFishLink();
   }
 
-  function saveBooking() {
+  async function saveBooking() {
     const guest = document.getElementById('inputGuest').value.trim();
     if (!guest) {
       alert('请填写预订人姓名或备注');
       return;
     }
+
+    let chickenIsQiPian = false;
+    let hasChicken = false;
+    let hasFish = false;
+
+    document.querySelectorAll('.m-chk:checked').forEach(chk => {
+      const cIdx = chk.dataset.cidx;
+      const iIdx = chk.dataset.iidx;
+      const item = MENU_CATEGORIES[cIdx].items[iIdx];
+      if (item.name === "隔水桑拿鸡") {
+        hasChicken = true;
+        const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+        if (cutSel && cutSel.value === "起片") {
+          chickenIsQiPian = true;
+        }
+      }
+    });
+
+    document.querySelectorAll('.extra-cut').forEach(sel => {
+      if (sel.value === "起片") {
+        chickenIsQiPian = true;
+        hasChicken = true;
+      }
+    });
+
+    document.querySelectorAll('.m-chk:checked').forEach(chk => {
+      const row = chk.closest('.menu-item-row');
+      if (row && row.dataset.isFish === "1") {
+        hasFish = true;
+      }
+    });
 
     let selectedMenus = [];
     document.querySelectorAll('.m-chk:checked').forEach(chk => {
@@ -604,7 +761,18 @@
       const item = MENU_CATEGORIES[cIdx].items[iIdx];
       const sub = document.querySelector(`.m-sub[data-cidx='${cIdx}'][data-iidx='${iIdx}']`).value;
       const qty = document.querySelector(`.m-qty[data-cidx='${cIdx}'][data-iidx='${iIdx}']`).value || '1';
-      selectedMenus.push(`${item.name}(${sub}) x${qty}`);
+      
+      let prefix = "";
+      if (item.hasCutStyle) {
+        const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+        prefix = cutSel ? `[${cutSel.value}] ` : "";
+      }
+      
+      if (item.isFish && hasChicken && chickenIsQiPian) {
+        selectedMenus.push(`${prefix}${item.name}(${sub} - 全蒸) x${qty}`);
+      } else {
+        selectedMenus.push(`${prefix}${item.name}(${sub}) x${qty}`);
+      }
     });
 
     document.querySelectorAll('.extra-sub').forEach(sel => {
@@ -613,12 +781,24 @@
       const item = MENU_CATEGORIES[cIdx].items[iIdx];
       const sub = sel.value;
       const qty = sel.parentElement.querySelector('.extra-qty').value || '1';
-      selectedMenus.push(`${item.name}(${sub}) x${qty}`);
+      
+      let extraCut = sel.parentElement.querySelector('.extra-cut');
+      let prefix = extraCut ? `[${extraCut.value}] ` : "";
+
+      if (item.isFish && hasChicken && chickenIsQiPian) {
+        selectedMenus.push(`${prefix}${item.name}(${sub} - 全蒸) x${qty}`);
+      } else {
+        selectedMenus.push(`${prefix}${item.name}(${sub}) x${qty}`);
+      }
     });
 
     const menuStr = selectedMenus.length > 0 ? selectedMenus.join('\n') : '';
 
+    // 保存时清除该桌的编辑锁
+    delete reservationMap[currentActiveTable.id].lock;
+
     reservationMap[currentActiveTable.id] = {
+      ...reservationMap[currentActiveTable.id],
       status: currentActiveTable.status === 'occupied' ? 'occupied' : 'reserved',
       guest: guest,
       pcount: document.getElementById('inputPCount').value.trim(),
@@ -629,30 +809,35 @@
       seatedTime: currentActiveTable.seatedTime || ''
     };
 
-    saveData();
+    await saveData();
     closeModal();
   }
 
-  function updateTableStatus(status) {
+  async function updateTableStatus(status) {
     if (status === 'free') {
       delete reservationMap[currentActiveTable.id];
     } else {
       const now = new Date();
       const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
       
+      delete reservationMap[currentActiveTable.id].lock;
       reservationMap[currentActiveTable.id] = {
         ...reservationMap[currentActiveTable.id],
         status: status,
         seatedTime: timeStr
       };
     }
-    saveData();
+    await saveData();
     closeModal();
   }
 
-  function closeModal() {
+  async function closeModal() {
+    if (currentActiveTable) {
+      await releaseLock(currentActiveTable.id);
+    }
     document.getElementById('modalMask').classList.add('hidden');
     currentActiveTable = null;
+    loadData();
   }
 </script>
 
