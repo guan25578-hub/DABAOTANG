@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -307,7 +307,6 @@
       updateCurrentReservationMap();
     });
 
-    // 监测员工触摸或点击行为，唤醒高效率同步
     ['touchstart', 'click', 'mousemove', 'scroll'].forEach(evt => {
       document.addEventListener(evt, () => {
         lastInteractTime = Date.now();
@@ -316,13 +315,13 @@
     });
 
     renderZones();
-    loadLocalCache(); // 1. 优先使用本地缓存瞬间切出界面，不耗额度
+    loadLocalCache();
     loadData();
     startSync();
 
     document.addEventListener("visibilitychange", function() {
       if (document.hidden) {
-        stopSync(); // 切后台或关屏彻底关闭定时器
+        stopSync();
       } else {
         loadData();
         startSync();
@@ -330,11 +329,9 @@
     });
   };
 
-  // 1. 智能休眠（1分钟不操作或离屏自动停用轮询，极省 API 额度）
   function startSync() {
     stopSync();
     syncTimer = setInterval(() => {
-      // 超过1分钟无触屏操作，自动进入休眠
       if (Date.now() - lastInteractTime > 60000) {
         updateSyncStatus(true, "休眠中 (点击屏幕恢复同步)");
         stopSync();
@@ -342,7 +339,7 @@
       }
       if (document.hidden || currentActiveTable) return;
       loadData();
-    }, 60000); // 后台轮询间隔拉长至 60 秒/次
+    }, 60000);
   }
 
   function stopSync() {
@@ -396,7 +393,6 @@
     renderGrid();
   }
 
-  // 2. 自动清洗超过 7 天的历史垃圾数据（节省网络 Payload）
   function cleanOldData() {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -480,7 +476,6 @@
     renderGrid();
   }
 
-  // 3. 当餐同名+同电话精准跨区查重
   function getOtherTablesForGuest(rec, currentTableId) {
     if (!rec || !rec.guest || !rec.guest.trim()) return [];
     const currentGuest = rec.guest.trim();
@@ -595,12 +590,11 @@
     }).join('');
   }
 
-  // 渲染当餐全店汇总看板（含菜品数量汇总，移除人数统计）
   function renderSummaryBoard(container) {
     let bookedTables = [];
     let totalReserved = 0;
     let totalOccupied = 0;
-    let dishSummaryMap = {}; // 存储当餐菜品总汇统计
+    let dishSummaryMap = {};
 
     Object.keys(reservationMap).forEach(tId => {
       let rec = reservationMap[tId];
@@ -612,14 +606,12 @@
         if (rec.status === 'reserved') totalReserved++;
         if (rec.status === 'occupied') totalOccupied++;
 
-        // 智能解析并累加本桌菜单
         if (rec.menu && rec.menu.trim()) {
           let lines = rec.menu.split('\n');
           lines.forEach(line => {
             let trimmed = line.trim();
             if (!trimmed) return;
             
-            // 正则匹配类似 "黑醋鹅(1只) x3" 或 "[起片] 隔水桑拿鸡(扇鸡) ×2"
             let match = trimmed.match(/^(.*?)\s*[xX×]\s*(\d+)$/);
             if (match) {
               let dishName = match[1].trim();
@@ -637,7 +629,6 @@
 
     const mealName = currentMeal === 'lunch' ? '🌞 午市' : '🌙 晚市';
 
-    // 1. 顶部统计栏（已移除人数汇总）
     let html = `
       <div class="summary-wrapper">
         <div class="summary-stats-bar">
@@ -656,7 +647,6 @@
         </div>
     `;
 
-    // 2. 菜品汇总统计卡片面板
     let dishKeys = Object.keys(dishSummaryMap);
     if (dishKeys.length > 0) {
       let dishItemsHtml = dishKeys.map(dish => `
@@ -682,7 +672,6 @@
       `;
     }
 
-    // 3. 无预订记录提示
     if (bookedTables.length === 0) {
       html += `
         <div style="text-align: center; padding: 40px 0; background: #fff; border-radius: 12px; color: #9ca3af;">
@@ -693,7 +682,6 @@
       return;
     }
 
-    // 4. 详细订单卡片
     bookedTables.forEach(t => {
       let statusTag = t.status === 'occupied' ? 
         `<span class="summary-tag status-occupied">🔥 就餐中</span>` : 
@@ -742,6 +730,49 @@
     document.getElementById('modalTableTitle').innerText = `${id} (${cap}) 详情`;
     renderModalBody(false);
     document.getElementById('modalMask').classList.remove('hidden');
+  }
+
+  // 辅助函数：将旧文本格式的菜单反解析为结构化数据，确保历史订单修改时也能恢复勾选
+  function parseMenuTextToObjects(menuStr) {
+    if (!menuStr || !menuStr.trim()) return [];
+    let list = [];
+    let lines = menuStr.split('\n');
+    lines.forEach(line => {
+      line = line.trim();
+      if (!line) return;
+      
+      let qty = 1;
+      let qtyMatch = line.match(/\s*[xX×]\s*(\d+)$/);
+      if (qtyMatch) {
+        qty = parseInt(qtyMatch[1], 10) || 1;
+        line = line.replace(/\s*[xX×]\s*(\d+)$/, '').trim();
+      }
+
+      let cut = '';
+      let cutMatch = line.match(/\[(起片\vert{}斩件)\]/);
+      if (cutMatch) {
+        cut = cutMatch[1];
+        line = line.replace(/\[(起片\vert{}斩件)\]/, '').trim();
+      }
+
+      let stbot = '';
+      let stbotMatch = line.match(/\[(.*?)\]/);
+      if (stbotMatch) {
+        stbot = stbotMatch[1];
+        line = line.replace(/\[.*?\]/, '').trim();
+      }
+
+      let name = line;
+      let sub = '';
+      let subMatch = line.match(/^(.*?)\((.*?)\)$/);
+      if (subMatch) {
+        name = subMatch[1].trim();
+        sub = subMatch[2].trim();
+      }
+
+      list.push({ name, sub, qty, cut, stbot });
+    });
+    return list;
   }
 
   function renderModalBody(isEditing) {
@@ -829,8 +860,14 @@
         <button class="action-btn btn-primary" onclick="showBookingPreview()">下一步：预览总汇并完成预定</button>
       `;
 
-      if (t.tempSelectedMenus && Array.isArray(t.tempSelectedMenus)) {
-        t.tempSelectedMenus.forEach(savedItem => {
+      // 提取已保存的菜单数据（支持当前预览临时数据、已存结构化数据或文本解析数据）
+      let savedList = t.tempSelectedMenus || t.selectedMenusObj;
+      if (!savedList || savedList.length === 0) {
+        savedList = parseMenuTextToObjects(t.menu);
+      }
+
+      if (savedList && Array.isArray(savedList) && savedList.length > 0) {
+        savedList.forEach(savedItem => {
           MENU_CATEGORIES.forEach((cat, cIdx) => {
             cat.items.forEach((item, iIdx) => {
               if (item.name === savedItem.name) {
@@ -847,6 +884,7 @@
                   const stbotSel = document.querySelector(`.m-stbot[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
                   if (stbotSel && savedItem.stbot) stbotSel.value = savedItem.stbot;
                 } else if (chk && chk.checked) {
+                  // 支持多份“+同款”菜品的原样恢复
                   addSameMenu(cIdx, iIdx);
                   const extraContainer = document.getElementById(`extra_rows_${cIdx}_${iIdx}`);
                   const lastRow = extraContainer.lastElementChild;
@@ -1122,6 +1160,7 @@
       phone: currentActiveTable.tempPhone,
       time: currentActiveTable.tempTime,
       menu: currentActiveTable.tempMenuStr,
+      selectedMenusObj: currentActiveTable.tempSelectedMenus, // 保存完整的结构化菜品列表
       note: currentActiveTable.tempNote,
       seatedTime: currentActiveTable.seatedTime || ''
     };
@@ -1153,7 +1192,7 @@
   async function closeModal() {
     document.getElementById('modalMask').classList.add('hidden');
     currentActiveTable = null;
-    renderGrid(); // 关闭弹窗仅刷新本地界面，不发请求
+    renderGrid();
   }
 </script>
 
