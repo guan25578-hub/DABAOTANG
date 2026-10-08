@@ -77,10 +77,11 @@
         .label { font-size: 14px; color: #374151; font-weight: bold; display: block; margin-bottom: 4px; }
         .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 15px; outline: none; }
         
-        /* 菜单选择面板（大幅放大字号与间距防误触） */
-        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; margin-top: 4px; }
-        .menu-search-input { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 10px; outline: none; background: #fff; }
+        /* 菜单选择面板 */
+        .menu-search-input { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; }
         .menu-category-title { font-size: 16px; font-weight: bold; color: #2563eb; margin: 14px 0 8px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
+        .menu-category-title:first-child { margin-top: 0; }
         .menu-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 17px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
         .menu-item-name { flex-grow: 1; color: #1f2937; font-weight: 500; display: flex; align-items: center; gap: 10px; }
         .m-chk { width: 22px; height: 22px; cursor: pointer; }
@@ -455,7 +456,7 @@
 
   function getCardBodyHtml(rec, tableId) {
     let otherTables = getOtherTablesForGuest(rec.guest, tableId);
-    let linkedText = otherTables.length > 0 ? `<div class="res-time" style="color:#d97706; font-weight:bold;">🔗 另定: ${otherTables.join(', ')}号</div>` : '';
+    let linkedText = otherTables.length > 0 ? `<div class="res-time" style="color:#d97706; font-weight:bold;">🔗 关联其他桌: ${otherTables.join('、')}</div>` : '';
     let lockBadgeHtml = (rec.lock && isLockValid(rec.lock)) ? `<div class="lock-badge">🔒 ${rec.lock.client === myClientId ? '我' : '他人'}编辑中</div>` : '';
     
     let content = '';
@@ -616,8 +617,9 @@
         </div>
         <div class="form-item">
           <label class="label">本桌预点菜品</label>
-          <div class="menu-selector-box">
-            <input type="text" id="menuSearchInput" class="menu-search-input" placeholder="🔍 快速过滤菜品名称（如：鸡、鱼、骨...）" oninput="filterMenuRows()">
+          <!-- 搜索框被单独拿出来，固定在滚动框上方 -->
+          <input type="text" id="menuSearchInput" class="menu-search-input" style="margin-bottom: 8px;" placeholder="🔍 快速过滤菜品名称（如：鸡、鱼、骨...）" oninput="filterMenuRows()">
+          <div class="menu-selector-box" style="margin-top: 0;">
             <div id="menuListContainer">${menuHtml}</div>
           </div>
         </div>
@@ -631,7 +633,6 @@
       // 如果有暂存的勾选菜单状态，回填到表单中
       if (t.tempSelectedMenus && Array.isArray(t.tempSelectedMenus)) {
         t.tempSelectedMenus.forEach(savedItem => {
-          // 在菜单中匹配相同名字的选项并勾选、恢复规格
           MENU_CATEGORIES.forEach((cat, cIdx) => {
             cat.items.forEach((item, iIdx) => {
               if (item.name === savedItem.name) {
@@ -639,7 +640,6 @@
                 if (chk && !chk.checked) {
                   chk.checked = true;
                   toggleMenuRow(cIdx, iIdx);
-                  // 恢复子选项/做法
                   const subSel = document.querySelector(`.m-sub[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
                   if (subSel && savedItem.sub) subSel.value = savedItem.sub;
                   const qtyInp = document.querySelector(`.m-qty[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
@@ -649,7 +649,6 @@
                   const stbotSel = document.querySelector(`.m-stbot[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
                   if (stbotSel && savedItem.stbot) stbotSel.value = savedItem.stbot;
                 } else if (chk && chk.checked) {
-                  // 如果已经勾选过（比如同款），则新增一行同款
                   addSameMenu(cIdx, iIdx);
                   const extraContainer = document.getElementById(`extra_rows_${cIdx}_${iIdx}`);
                   const lastRow = extraContainer.lastElementChild;
@@ -669,7 +668,7 @@
     }
 
     let otherTables = getOtherTablesForGuest(t.guest, t.id);
-    let linkedDetailHtml = otherTables.length > 0 ? `<div class="detail-row"><span class="d-label" style="color:#d97706;">跨桌联动：</span><span class="d-value" style="color:#d97706; font-weight:bold;">该客人在本餐次还预定了其他桌号: ${otherTables.join(', ')}号</span></div>` : '';
+    let linkedDetailHtml = otherTables.length > 0 ? `<div class="detail-row"><span class="d-label" style="color:#d97706; font-weight:bold;">关联桌号：</span><span class="d-value" style="color:#d97706; font-weight:bold;">🔗 该客人在本餐次还预定了: ${otherTables.join('、')}</span></div>` : '';
 
     if (t.status === 'reserved') {
       body.innerHTML = `
@@ -833,7 +832,6 @@
     return selectedMenus;
   }
 
-  // 收集详细菜品结构对象用于回填
   function collectMenuObjects() {
     let list = [];
     document.querySelectorAll('.m-chk:checked').forEach(chk => {
@@ -884,7 +882,7 @@
     const time = document.getElementById('inputTime').value.trim();
     const note = document.getElementById('inputNote').value.trim();
 
-    // 暂存当前输入数据，防止点返回时丢失
+    // 暂存所有输入数据，确保最后一步能够直接取用
     currentActiveTable.tempGuest = guest;
     currentActiveTable.tempPCount = pcount;
     currentActiveTable.tempPhone = phone;
@@ -893,6 +891,8 @@
     currentActiveTable.tempSelectedMenus = collectMenuObjects();
 
     const menus = collectMenuData();
+    // ★ 关键修复：把整理好的菜单也存起来，留给最终保存时使用
+    currentActiveTable.tempMenuStr = menus.length > 0 ? menus.join('\n') : '';
 
     const body = document.getElementById('modalBody');
     body.innerHTML = `
@@ -902,7 +902,7 @@
         <div><b>姓名：</b>${guest} ${pcount ? '(' + pcount + '人)' : ''}</div>
         <div><b>电话：</b>${phone || '未填写'}</div>
         <div><b>时间：</b>${time}</div>
-        <div><b>预点菜单：</b><br>${menus.length > 0 ? menus.join('<br>') : '无预点菜品'}</div>
+        <div><b>预点菜单：</b><br>${currentActiveTable.tempMenuStr ? currentActiveTable.tempMenuStr.replace(/\n/g, '<br>') : '无预点菜品'}</div>
         <div><b>其他备注：</b>${note || '无'}</div>
       </div>
       <div style="font-size:13px; color:#6b7280; margin-bottom:15px; text-align:center;">请仔细检查以上信息，确认无误后点击下方按钮完成预定。</div>
@@ -914,21 +914,18 @@
   }
 
   async function saveBooking() {
-    const guest = document.getElementById('inputGuest').value.trim();
-    const selectedMenus = collectMenuData();
-    const menuStr = selectedMenus.length > 0 ? selectedMenus.join('\n') : '';
-
+    // ★ 关键修复：直接读取暂存在 currentActiveTable 里的最终记忆，而不是去读已被替换的 input 节点
     delete reservationMap[currentActiveTable.id].lock;
 
     reservationMap[currentActiveTable.id] = {
       ...reservationMap[currentActiveTable.id],
       status: currentActiveTable.status === 'occupied' ? 'occupied' : 'reserved',
-      guest: guest,
-      pcount: document.getElementById('inputPCount').value.trim(),
-      phone: document.getElementById('inputPhone').value.trim(),
-      time: document.getElementById('inputTime').value.trim(),
-      menu: menuStr,
-      note: document.getElementById('inputNote').value.trim(),
+      guest: currentActiveTable.tempGuest,
+      pcount: currentActiveTable.tempPCount,
+      phone: currentActiveTable.tempPhone,
+      time: currentActiveTable.tempTime,
+      menu: currentActiveTable.tempMenuStr,
+      note: currentActiveTable.tempNote,
       seatedTime: currentActiveTable.seatedTime || ''
     };
 
