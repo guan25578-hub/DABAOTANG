@@ -79,6 +79,7 @@
         
         /* 菜单选择面板（大幅放大字号与间距防误触） */
         .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; margin-top: 4px; }
+        .menu-search-input { width: 100%; padding: 8px 12px; font-size: 14px; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 10px; outline: none; background: #fff; }
         .menu-category-title { font-size: 16px; font-weight: bold; color: #2563eb; margin: 14px 0 8px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
         .menu-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 17px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
         .menu-item-name { flex-grow: 1; color: #1f2937; font-weight: 500; display: flex; align-items: center; gap: 10px; }
@@ -547,7 +548,7 @@
       
       let menuHtml = '';
       MENU_CATEGORIES.forEach((cat, cIdx) => {
-        menuHtml += `<div class="menu-category-title">${cat.category}</div>`;
+        menuHtml += `<div class="menu-category-title" data-cat="${cat.category}">${cat.category}</div>`;
         cat.items.forEach((item, iIdx) => {
           let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
           
@@ -574,7 +575,7 @@
           }
 
           menuHtml += `
-            <div class="menu-item-row">
+            <div class="menu-item-row" data-name="${item.name}">
               <span class="menu-item-name">
                 <input type="checkbox" class="m-chk" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="toggleMenuRow(${cIdx}, ${iIdx})">
                 ${item.name}
@@ -610,8 +611,11 @@
           <input class="input" id="inputTime" value="${t.time || defaultTime}">
         </div>
         <div class="form-item">
-          <label class="label">本桌预点菜品 (可多选、加同款、设底蒸拼配)</label>
-          <div class="menu-selector-box">${menuHtml}</div>
+          <label class="label">本桌预点菜品</label>
+          <div class="menu-selector-box">
+            <input type="text" id="menuSearchInput" class="menu-search-input" placeholder="🔍 快速过滤菜品名称（如：鸡、鱼、骨...）" oninput="filterMenuRows()">
+            <div id="menuListContainer">${menuHtml}</div>
+          </div>
         </div>
         <div class="form-item" style="margin-top:8px;">
           <label class="label">其他特殊备注</label>
@@ -659,6 +663,40 @@
         </div>
       `;
     }
+  }
+
+  function filterMenuRows() {
+    const keyword = document.getElementById('menuSearchInput').value.trim().toLowerCase();
+    const rows = document.querySelectorAll('.menu-item-row');
+    const titles = document.querySelectorAll('.menu-category-title');
+
+    rows.forEach(row => {
+      const name = row.dataset.name.toLowerCase();
+      if (keyword === '' || name.includes(keyword)) {
+        row.style.display = 'flex';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    // 简单根据搜索隐藏/显示分类标题
+    titles.forEach(title => {
+      if (keyword === '') {
+        title.style.display = 'block';
+        return;
+      }
+      // 如果该分类下有任意一个显示的菜，则显示分类，否则隐藏
+      let nextElem = title.nextElementSibling;
+      let hasVisible = false;
+      while(nextElem && !nextElem.classList.contains('menu-category-title')) {
+        if (nextElem.classList.contains('menu-item-row') && nextElem.style.display !== 'none') {
+          hasVisible = true;
+          break;
+        }
+        nextElem = nextElem.nextElementSibling;
+      }
+      title.style.display = hasVisible ? 'block' : 'none';
+    });
   }
 
   function toggleMenuRow(cIdx, iIdx) {
@@ -745,7 +783,6 @@
       let extraStBot = sel.parentElement.querySelector('.extra-stbot');
       if (extraStBot && extraStBot.value !== "普通") prefix += `[${extraStBot.value}] `;
 
-      // 获取菜名
       const cIdx = sel.dataset.cidx;
       const iIdx = sel.dataset.iidx;
       const item = MENU_CATEGORIES[cIdx].items[iIdx];
