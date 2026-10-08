@@ -86,8 +86,8 @@
         .m-chk { width: 22px; height: 22px; cursor: pointer; }
         
         /* 下拉选择与数量输入框显著放大 */
-        .menu-sub-select { font-size: 15px; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #fff; margin-right: 6px; outline: none; font-weight: bold; }
-        .menu-qty-input { width: 55px; font-size: 16px; padding: 7px 4px; border: 1.5px solid #cbd5e1; border-radius: 6px; text-align: center; background: #fff; outline: none; font-weight: bold; }
+        .menu-sub-select { font-size: 14px; padding: 7px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #fff; margin-right: 4px; outline: none; font-weight: bold; }
+        .menu-qty-input { width: 50px; font-size: 15px; padding: 7px 4px; border: 1.5px solid #cbd5e1; border-radius: 6px; text-align: center; background: #fff; outline: none; font-weight: bold; }
 
         .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
         .d-label { color: #6b7280; width: 90px; flex-shrink: 0; }
@@ -228,20 +228,24 @@
       ]
     },
     {
-      category: "5. 火锅配料与加料（含鸡/鱼底蒸菜拼配）",
+      category: "5. 火锅配料与加料（含底蒸双拼组合）",
       items: [
+        { name: "扇鸡一只", subs: ["标准"] },
+        { name: "小鸡一只", subs: ["标准"] },
+        { name: "允鱼一条", subs: ["标准"] },
+        { name: "大头鱼一条", subs: ["标准"] },
         { name: "一只清远鸡", subs: ["标准"] }, { name: "猪肉丸", subs: ["标准"] },
         { name: "猪肚", subs: ["标准"] }, { name: "排骨段", subs: ["标准"] },
         { name: "桑拿排骨", subs: ["标准"] }, { name: "桑拿竹肠", subs: ["标准"] },
         { name: "火锅面", subs: ["标准"] }, { name: "清补凉", subs: ["标准"] },
         { name: "玉米", subs: ["标准"] }, { name: "红萝卜", subs: ["标准"] },
-        { name: "佛手瓜", subs: ["标准"], canSteamBottom: true }, { name: "酸菜", subs: ["标准"] },
+        { name: "佛手瓜", subs: ["标准", "蕃薯+佛手瓜双拼", "芋头+佛手瓜双拼"], canSteamBottom: true }, { name: "酸菜", subs: ["标准"] },
         { name: "虫草花", subs: ["标准"] }, { name: "支竹", subs: ["标准"] },
-        { name: "香芋", subs: ["标准"], canSteamBottom: true }, { name: "木瓜", subs: ["标准"] },
+        { name: "香芋", subs: ["标准", "蕃薯+香芋双拼", "芋头+佛手瓜双拼"], canSteamBottom: true }, { name: "木瓜", subs: ["标准"] },
         { name: "杂菜", subs: ["标准"] }, { name: "鱼皮角", subs: ["标准"] },
         { name: "牛肉丸", subs: ["标准"] }, { name: "桑拿牛肉", subs: ["标准"] },
         { name: "鱼料", subs: ["标准"] }, { name: "配料", subs: ["标准"] },
-        { name: "蒜段", subs: ["标准"] }, { name: "蕃薯", subs: ["标准"], canSteamBottom: true }, { name: "白萝卜", subs: ["标准"] }
+        { name: "蒜段", subs: ["标准"] }, { name: "蕃薯", subs: ["标准", "蕃薯+香芋双拼", "蕃薯+佛手瓜双拼"], canSteamBottom: true }, { name: "白萝卜", subs: ["标准"] }
       ]
     }
   ];
@@ -566,10 +570,10 @@
           if (item.canSteamBottom) {
             steamBottomOptions = `
               <select class="menu-sub-select m-stbot" data-cidx="${cIdx}" data-iidx="${iIdx}" style="background:#dcfce7; color:#15803d;">
-                <option value="普通">标准做法</option>
-                <option value="鸡底蒸">【鸡底蒸】</option>
-                <option value="鱼底蒸">【鱼底蒸】</option>
-                <option value="鸡/鱼底双拼">【鸡/鱼底双拼】</option>
+                <option value="标准底蒸">常规底蒸</option>
+                <option value="鸡底蒸">铺鸡底蒸</option>
+                <option value="鱼底蒸">铺鱼底蒸</option>
+                <option value="鸡底+鱼底双拼蒸">鸡底+鱼底双拼蒸</option>
               </select>
             `;
           }
@@ -679,13 +683,11 @@
       }
     });
 
-    // 简单根据搜索隐藏/显示分类标题
     titles.forEach(title => {
       if (keyword === '') {
         title.style.display = 'block';
         return;
       }
-      // 如果该分类下有任意一个显示的菜，则显示分类，否则隐藏
       let nextElem = title.nextElementSibling;
       let hasVisible = false;
       while(nextElem && !nextElem.classList.contains('menu-category-title')) {
@@ -729,10 +731,10 @@
     if (item.canSteamBottom) {
       extraSteamBottomHtml = `
         <select class="menu-sub-select extra-stbot" style="background:#dcfce7; color:#15803d;">
-          <option value="普通">标准做法</option>
-          <option value="鸡底蒸">【鸡底蒸】</option>
-          <option value="鱼底蒸">【鱼底蒸】</option>
-          <option value="鸡/鱼底双拼">【鸡/鱼底双拼】</option>
+          <option value="标准底蒸">常规底蒸</option>
+          <option value="鸡底蒸">铺鸡底蒸</option>
+          <option value="鱼底蒸">铺鱼底蒸</option>
+          <option value="鸡底+鱼底双拼蒸">鸡底+鱼底双拼蒸</option>
         </select>
       `;
     }
@@ -740,7 +742,7 @@
     const div = document.createElement('div');
     div.style.cssText = "display:flex; justify-content:flex-end; align-items:center; margin-top:8px;";
     div.innerHTML = `
-      <span style="font-size:13px; color:#6b7280; margin-right:6px; font-weight:bold;">[另加同款]</span>
+      <span style="font-size:13px; color:#6b7280; margin-right:6px; font-weight:bold;">[同款]</span>
       ${extraCutHtml}
       ${extraSteamBottomHtml}
       <select class="menu-sub-select extra-sub" data-cidx="${cIdx}" data-iidx="${iIdx}">${subOptions}</select>
@@ -767,7 +769,7 @@
       }
       if (item.canSteamBottom) {
         const stbotSel = document.querySelector(`.m-stbot[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
-        if (stbotSel && stbotSel.value !== "普通") prefix += `[${stbotSel.value}] `;
+        if (stbotSel && stbotSel.value !== "标准底蒸") prefix += `[${stbotSel.value}] `;
       }
       
       selectedMenus.push(`${prefix}${item.name}(${sub}) x${qty}`);
@@ -781,7 +783,7 @@
       let extraCut = sel.parentElement.querySelector('.extra-cut');
       if (extraCut) prefix += `[${extraCut.value}] `;
       let extraStBot = sel.parentElement.querySelector('.extra-stbot');
-      if (extraStBot && extraStBot.value !== "普通") prefix += `[${extraStBot.value}] `;
+      if (extraStBot && extraStBot.value !== "标准底蒸") prefix += `[${extraStBot.value}] `;
 
       const cIdx = sel.dataset.cidx;
       const iIdx = sel.dataset.iidx;
