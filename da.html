@@ -40,16 +40,16 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .dot { width: 10px; height: 10px; border-radius: 50%; }
 
-        /* 桌态网格 —— 固定卡片高度，防止文字过多撑乱布局 */
+        /* 桌态网格 —— 固定卡片高度，保持格式绝对整齐 */
         .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .table-card { height: 115px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.1s; }
+        .table-card { height: 125px; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; justify-content: space-between; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.1s; }
         .table-card:active { transform: scale(0.97); }
         .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
         .table-name { font-size: 15px; font-weight: bold; }
         .table-cap { font-size: 11px; opacity: 0.85; }
         .search-zone-badge { font-size: 10px; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-top: 2px; display: inline-block; font-weight: normal; }
         
-        /* 卡片内部文本溢出省略，保持格式绝对整齐 */
+        /* 卡片内部文本溢出省略 */
         .card-body { margin-top: 4px; overflow: hidden; }
         .guest-name { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .res-time { font-size: 11px; opacity: 0.85; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -76,7 +76,7 @@
         .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 14px; outline: none; }
         
         /* 菜单选择面板优化 */
-        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; max-height: 220px; overflow-y: auto; margin-top: 4px; }
+        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; max-height: 200px; overflow-y: auto; margin-top: 4px; }
         .menu-category-title { font-size: 12px; font-weight: bold; color: #2563eb; margin: 8px 0 4px 0; border-bottom: 1px dashed #e5e7eb; padding-bottom: 2px; }
         .menu-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 5px 0; border-bottom: 1px solid #f3f4f6; }
         .menu-item-name { flex-grow: 1; color: #374151; }
@@ -165,28 +165,28 @@
         { name: "隔水桑拿鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
         { name: "黑醋鹅", subs: ["1只", "半只", "熟上", "锅上"] },
         { name: "虾蟹鸡煲", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "隔水蒸鱼", subs: ["允鱼", "大头鱼"] },
-        { name: "菌菇浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "鲍鱼青榄五指毛桃浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "陈皮浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "夏枯草白豆浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "木瓜清补凉浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] }
+        { name: "隔水蒸鱼(28元/斤)", subs: ["允鱼", "大头鱼"] },
+        { name: "菌菇浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "鲍鱼青榄五指毛桃浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "陈皮浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "夏枯草白豆浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "木瓜清补凉浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] }
       ]
     },
     {
       category: "3. 焖煮主菜",
       items: [
         { name: "大盘鱼", subs: ["允鱼", "大头鱼"] },
-        { name: "啫啫鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "大盘鱼加啫鸡", subs: ["①允鱼", "①大头鱼", "②扇鸡", "②大鸡", "②小鸡"] },
+        { name: "啫啫鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "大盘鱼加啫鸡", subs: ["①允鱼", "①大头鱼", "②扇鸡", "②大鸡"] },
         { name: "大盘菜", subs: ["标准"] },
-        { name: "鲍鱼虾炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "酸菜炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "栗子炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "支竹炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "鲍鱼虾炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "酸菜炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "栗子炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "支竹炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "酸菜炆鱼", subs: ["允鱼", "大头鱼"] },
-        { name: "虾蟹炆鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
-        { name: "大煲鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "虾蟹炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "大煲鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
         { name: "炆鹅", subs: ["土豆炆", "酸菜炆", "栗子炆", "支竹炆"] }
       ]
     },
@@ -369,21 +369,42 @@
     renderGrid();
   }
 
-  // 卡片只显示精简摘要，用省略号处理，绝不撑大撑乱格式
-  function getCardBodyHtml(rec) {
+  // 检查该客人在当前餐次还订了其他什么桌子（跨桌关联）
+  function getOtherTablesForGuest(guestName, currentTableId) {
+    if (!guestName) return [];
+    let others = [];
+    Object.keys(reservationMap).forEach(tId => {
+      if (tId !== currentTableId) {
+        let rec = reservationMap[tId];
+        if (rec && rec.guest && rec.guest.trim() === guestName.trim()) {
+          others.push(tId);
+        }
+      }
+    });
+    return others;
+  }
+
+  function getCardBodyHtml(rec, tableId) {
+    let otherTables = getOtherTablesForGuest(rec.guest, tableId);
+    let linkedText = otherTables.length > 0 ? `<div class="res-time" style="color:#d97706; font-weight:bold;">🔗 另定: ${otherTables.join(', ')}号</div>` : '';
+    
     if (rec.status === 'reserved') {
       let menuSummary = rec.menu ? `🍲 ${rec.menu.replace(/\n/g, ' / ')}` : '';
+      let pCount = rec.pcount ? `👥 ${rec.pcount}人` : '';
       return `
-        <div class="guest-name">👤 ${rec.guest}</div>
+        <div class="guest-name">👤 ${rec.guest} ${pCount}</div>
         <div class="res-time">⏰ ${rec.time || '已预留'}</div>
+        ${linkedText}
         <div class="res-time" style="color:#2563eb;">${menuSummary || (rec.note ? '📝 ' + rec.note : '')}</div>
       `;
     } 
     if (rec.status === 'occupied') {
       let menuSummary = rec.menu ? `🍲 ${rec.menu.replace(/\n/g, ' / ')}` : '';
+      let pCount = rec.pcount ? `👥 ${rec.pcount}人` : '';
       return `
-        <div class="guest-name">👤 ${rec.guest || '用餐中'}</div>
+        <div class="guest-name">👤 ${rec.guest || '用餐中'} ${pCount}</div>
         <div class="res-time">🔥 入座: ${rec.seatedTime || rec.time || '刚刚'}</div>
+        ${linkedText}
         <div class="res-time" style="color:#2563eb;">${menuSummary || (rec.note ? '📝 ' + rec.note : '')}</div>
       `;
     }
@@ -418,7 +439,7 @@
             <div><span class="table-name">${item.id}</span><div><span class="search-zone-badge">${item.zoneName}</span></div></div>
             <span class="table-cap">${item.cap}</span>
           </div>
-          <div class="card-body">${getCardBodyHtml(item.rec)}</div>
+          <div class="card-body">${getCardBodyHtml(item.rec, item.id)}</div>
         </div>
       `).join('');
       return;
@@ -430,7 +451,7 @@
       return `
         <div class="table-card status-${rec.status}" onclick="openTableModal('${t.id}', '${t.cap}')">
           <div class="card-header"><span class="table-name">${t.id}</span><span class="table-cap">${t.cap}</span></div>
-          <div class="card-body">${getCardBodyHtml(rec)}</div>
+          <div class="card-body">${getCardBodyHtml(rec, t.id)}</div>
         </div>
       `;
     }).join('');
@@ -457,7 +478,7 @@
         cat.items.forEach((item, iIdx) => {
           let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
           menuHtml += `
-            <div class="menu-item-row" id="menu_row_${cIdx}_${iIdx}">
+            <div class="menu-item-row">
               <span class="menu-item-name">
                 <input type="checkbox" class="m-chk" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="toggleMenuRow(${cIdx}, ${iIdx})" style="margin-right:6px;">
                 ${item.name}
@@ -468,7 +489,6 @@
                 <button type="button" onclick="addSameMenu(${cIdx}, ${iIdx})" style="background:#e5e7eb; border:none; padding:2px 6px; border-radius:4px; font-size:11px; margin-left:4px; cursor:pointer;" title="点两份同菜不同做法">+同款</button>
               </div>
             </div>
-            <!-- 动态生成的同款不同做法容器 -->
             <div id="extra_rows_${cIdx}_${iIdx}"></div>
           `;
         });
@@ -476,8 +496,12 @@
 
       body.innerHTML = `
         <div class="form-item">
-          <label class="label">客人备注名*</label>
-          <input class="input" id="inputGuest" placeholder="如: 张总 / 李女士4位" value="${t.guest || ''}">
+          <label class="label">客人姓名 / 备注名*</label>
+          <input class="input" id="inputGuest" placeholder="如: 李小姐" value="${t.guest || ''}">
+        </div>
+        <div class="form-item">
+          <label class="label">用餐人数</label>
+          <input class="input" id="inputPCount" type="number" placeholder="如: 8人" value="${t.pcount || ''}">
         </div>
         <div class="form-item">
           <label class="label">预留电话</label>
@@ -488,29 +512,33 @@
           <input class="input" id="inputTime" value="${t.time || defaultTime}">
         </div>
         <div class="form-item">
-          <label class="label">预点菜品 (勾选后可选择做法/数量，支持点多份不同做法)</label>
+          <label class="label">本桌预点菜品 (独立设置本桌菜单)</label>
           <div class="menu-selector-box">${menuHtml}</div>
         </div>
         <div class="form-item" style="margin-top:8px;">
           <label class="label">其他特殊备注</label>
-          <input class="input" id="inputNote" placeholder="如: 需宝宝椅、靠窗等" value="${t.note || ''}">
+          <input class="input" id="inputNote" placeholder="如: 跨桌预定、靠窗等" value="${t.note || ''}">
         </div>
-        <button class="action-btn btn-primary" onclick="saveBooking()">保存预定信息</button>
+        <button class="action-btn btn-primary" onclick="saveBooking()">保存本桌预定信息</button>
       `;
       return;
     }
 
+    let otherTables = getOtherTablesForGuest(t.guest, t.id);
+    let linkedDetailHtml = otherTables.length > 0 ? `<div class="detail-row"><span class="d-label" style="color:#d97706;">跨桌联动：</span><span class="d-value" style="color:#d97706; font-weight:bold;">该客人在本餐次还预定了其他桌号: ${otherTables.join(', ')}号</span></div>` : '';
+
     if (t.status === 'reserved') {
       body.innerHTML = `
-        <div class="detail-row"><span class="d-label">预 留 人：</span><span class="d-value bold">${t.guest}</span></div>
+        <div class="detail-row"><span class="d-label">预 留 人：</span><span class="d-value bold">${t.guest} ${t.pcount ? '(' + t.pcount + '人)' : ''}</span></div>
+        ${linkedDetailHtml}
         <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
         <div class="detail-row"><span class="d-label">到店时间：</span><span class="d-value">${t.time || '未填写'}</span></div>
-        <div class="detail-row"><span class="d-label">预点菜品：</span><span class="d-value highlight" style="white-space:pre-line;">${t.menu || '无预点菜品'}</span></div>
+        <div class="detail-row"><span class="d-label">本桌菜单：</span><span class="d-value highlight" style="white-space:pre-line;">${t.menu || '本桌无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
         <div class="btn-group">
           <button class="action-btn btn-success" onclick="updateTableStatus('occupied')">客人已入座 (自动记时)</button>
-          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改预定信息</button>
+          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改本桌信息</button>
           <button class="action-btn btn-danger" onclick="updateTableStatus('free')">取消预定</button>
         </div>
       `;
@@ -520,21 +548,21 @@
     if (t.status === 'occupied') {
       body.innerHTML = `
         <div class="occupied-badge">🔥 当前处于【就餐中】状态</div>
-        <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写备注'}</span></div>
+        <div class="detail-row"><span class="d-label">就 餐 人：</span><span class="d-value bold">${t.guest || '未填写'} ${t.pcount ? '(' + t.pcount + '人)' : ''}</span></div>
+        ${linkedDetailHtml}
         <div class="detail-row"><span class="d-label">联系电话：</span><span class="d-value phone">${t.phone ? `<a href="tel:${t.phone}">${t.phone} (点击一键拨打)</a>` : '未填写'}</span></div>
         <div class="detail-row"><span class="d-label">入座时间：</span><span class="d-value highlight">${t.seatedTime || t.time || '刚刚'}</span></div>
-        <div class="detail-row"><span class="d-label">预点菜品：</span><span class="d-value highlight" style="white-space:pre-line;">${t.menu || '无预点菜品'}</span></div>
+        <div class="detail-row"><span class="d-label">本桌菜单：</span><span class="d-value highlight" style="white-space:pre-line;">${t.menu || '本桌无预点菜品'}</span></div>
         <div class="detail-row"><span class="d-label">其他备注：</span><span class="d-value warn">${t.note || '无'}</span></div>
         
         <div class="btn-group">
           <button class="action-btn btn-primary" onclick="updateTableStatus('free')">客人已结账 / 清台 (恢复空闲)</button>
-          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改预定/备注信息</button>
+          <button class="action-btn btn-warning" onclick="renderModalBody(true)">修改本桌信息</button>
         </div>
       `;
     }
   }
 
-  // 勾选菜品时显示规格和数量选择框
   function toggleMenuRow(cIdx, iIdx) {
     const chk = document.querySelector(`.m-chk[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
     const controls = document.getElementById(`m_controls_${cIdx}_${iIdx}`);
@@ -542,18 +570,16 @@
       controls.style.display = 'flex';
     } else {
       controls.style.display = 'none';
-      document.getElementById(`extra_rows_${cIdx}_${iIdx}`).innerHTML = ''; // 清空附加同款
+      document.getElementById(`extra_rows_${cIdx}_${iIdx}`).innerHTML = '';
     }
   }
 
-  // 核心功能：添加同款不同做法的菜品行
   function addSameMenu(cIdx, iIdx) {
     const item = MENU_CATEGORIES[cIdx].items[iIdx];
     const extraContainer = document.getElementById(`extra_rows_${cIdx}_${iIdx}`);
     let subOptions = item.subs.map(s => `<option value="${s}">${s}</option>`).join('');
     
     const div = document.createElement('div');
-    div.className = 'extra-menu-row';
     div.style.cssText = "display:flex; justify-content:flex-end; align-items:center; margin-top:4px;";
     div.innerHTML = `
       <span style="font-size:12px; color:#6b7280; margin-right:6px;">[另加做法]</span>
@@ -572,8 +598,6 @@
     }
 
     let selectedMenus = [];
-
-    // 收集所有勾选的主菜
     document.querySelectorAll('.m-chk:checked').forEach(chk => {
       const cIdx = chk.dataset.cidx;
       const iIdx = chk.dataset.iidx;
@@ -583,7 +607,6 @@
       selectedMenus.push(`${item.name}(${sub}) x${qty}`);
     });
 
-    // 收集所有通过“+同款”增加的不同做法菜品
     document.querySelectorAll('.extra-sub').forEach(sel => {
       const cIdx = sel.dataset.cidx;
       const iIdx = sel.dataset.iidx;
@@ -598,10 +621,11 @@
     reservationMap[currentActiveTable.id] = {
       status: currentActiveTable.status === 'occupied' ? 'occupied' : 'reserved',
       guest: guest,
-      phone: document.getElementById('inputPhone').value,
-      time: document.getElementById('inputTime').value,
+      pcount: document.getElementById('inputPCount').value.trim(),
+      phone: document.getElementById('inputPhone').value.trim(),
+      time: document.getElementById('inputTime').value.trim(),
       menu: menuStr,
-      note: document.getElementById('inputNote').value,
+      note: document.getElementById('inputNote').value.trim(),
       seatedTime: currentActiveTable.seatedTime || ''
     };
 
