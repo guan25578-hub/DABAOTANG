@@ -78,15 +78,15 @@
         .input, .textarea { width: 100%; background: #f9fafb; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 12px; font-size: 15px; outline: none; }
         
         /* 菜单选择面板（大幅放大字号与间距防误触） */
-        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; max-height: 280px; overflow-y: auto; margin-top: 4px; }
-        .menu-category-title { font-size: 15px; font-weight: bold; color: #2563eb; margin: 12px 0 6px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
-        .menu-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 16px; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
-        .menu-item-name { flex-grow: 1; color: #1f2937; font-weight: 500; display: flex; align-items: center; gap: 8px; }
-        .m-chk { width: 20px; height: 20px; cursor: pointer; }
+        .menu-selector-box { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px; max-height: 300px; overflow-y: auto; margin-top: 4px; }
+        .menu-category-title { font-size: 16px; font-weight: bold; color: #2563eb; margin: 14px 0 8px 0; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px; }
+        .menu-item-row { display: flex; justify-content: space-between; align-items: center; font-size: 17px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; }
+        .menu-item-name { flex-grow: 1; color: #1f2937; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+        .m-chk { width: 22px; height: 22px; cursor: pointer; }
         
         /* 下拉选择与数量输入框显著放大 */
-        .menu-sub-select { font-size: 14px; padding: 6px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #fff; margin-right: 6px; outline: none; font-weight: bold; }
-        .menu-qty-input { width: 50px; font-size: 15px; padding: 6px 4px; border: 1.5px solid #cbd5e1; border-radius: 6px; text-align: center; background: #fff; outline: none; font-weight: bold; }
+        .menu-sub-select { font-size: 15px; padding: 7px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; background: #fff; margin-right: 6px; outline: none; font-weight: bold; }
+        .menu-qty-input { width: 55px; font-size: 16px; padding: 7px 4px; border: 1.5px solid #cbd5e1; border-radius: 6px; text-align: center; background: #fff; outline: none; font-weight: bold; }
 
         .detail-row { display: flex; margin-bottom: 12px; font-size: 14px; }
         .d-label { color: #6b7280; width: 90px; flex-shrink: 0; }
@@ -96,9 +96,13 @@
         .d-value.warn { color: #dc2626; }
         .occupied-badge { margin-bottom: 15px; padding: 8px 12px; background: #fee2e2; border-radius: 8px; color: #b91c1c; font-size: 13px; font-weight: bold; text-align: center; }
 
+        /* 预览确认弹窗样式 */
+        .preview-box { background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 14px; font-size: 15px; color: #334155; line-height: 1.6; margin-bottom: 15px; }
+        .preview-box b { color: #1e293b; }
+
         /* 按钮组 */
         .btn-group { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; }
-        .action-btn { width: 100%; border: none; border-radius: 8px; font-size: 15px; padding: 14px 0; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
+        .action-btn { width: 100%; border: none; border-radius: 8px; font-size: 16px; padding: 14px 0; cursor: pointer; font-weight: bold; transition: opacity 0.2s; }
         .action-btn:active { opacity: 0.8; }
         .btn-primary { background: #2563eb; color: #fff; }
         .btn-success { background: #16a34a; color: #fff; }
@@ -177,18 +181,18 @@
         { name: "黑醋鹅", subs: ["1只", "半只", "熟上", "锅上"] },
         { name: "虾蟹鸡煲", subs: ["扇鸡", "大鸡", "小鸡"] },
         { name: "隔水蒸鱼(28元/斤)", subs: ["允鱼", "大头鱼"], isFish: true },
-        { name: "菌菇浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
-        { name: "鲍鱼青榄五指毛桃浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
-        { name: "陈皮浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
-        { name: "夏枯草白豆浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
-        { name: "木瓜清补凉浸鸡", subs: ["扇鸡", "大鸡", "small鸡"] }
+        { name: "菌菇浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "鲍鱼青榄五指毛桃浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "陈皮浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "夏枯草白豆浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
+        { name: "木瓜清补凉浸鸡", subs: ["扇鸡", "大鸡", "小鸡"] }
       ]
     },
     {
       category: "3. 焖煮主菜",
       items: [
         { name: "大盘鱼", subs: ["允鱼", "大头鱼"], isFish: true },
-        { name: "啫啫鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
+        { name: "啫啫鸡", subs: ["扇鸡", "大鸡", "小鸡"] },
         { name: "大盘鱼加啫鸡", subs: ["①允鱼", "①大头鱼", "②扇鸡", "②大鸡"], isFish: true },
         { name: "大盘菜", subs: ["标准"] },
         { name: "鲍鱼虾炆鸡", subs: ["扇鸡", "大鸡", "small鸡"] },
@@ -223,21 +227,20 @@
       ]
     },
     {
-      category: "5. 火锅配料与加料",
+      category: "5. 火锅配料与加料（含鸡/鱼底蒸菜拼配）",
       items: [
         { name: "一只清远鸡", subs: ["标准"] }, { name: "猪肉丸", subs: ["标准"] },
         { name: "猪肚", subs: ["标准"] }, { name: "排骨段", subs: ["标准"] },
         { name: "桑拿排骨", subs: ["标准"] }, { name: "桑拿竹肠", subs: ["标准"] },
         { name: "火锅面", subs: ["标准"] }, { name: "清补凉", subs: ["标准"] },
         { name: "玉米", subs: ["标准"] }, { name: "红萝卜", subs: ["标准"] },
-        { name: "佛手瓜", subs: ["标准"] }, { name: "酸菜", subs: ["标准"] },
+        { name: "佛手瓜", subs: ["标准"], canSteamBottom: true }, { name: "酸菜", subs: ["标准"] },
         { name: "虫草花", subs: ["标准"] }, { name: "支竹", subs: ["标准"] },
-        { name: "香芋", subs: ["标准"] }, { name: "木瓜", subs: ["标准"] },
+        { name: "香芋", subs: ["标准"], canSteamBottom: true }, { name: "木瓜", subs: ["标准"] },
         { name: "杂菜", subs: ["标准"] }, { name: "鱼皮角", subs: ["标准"] },
         { name: "牛肉丸", subs: ["标准"] }, { name: "桑拿牛肉", subs: ["标准"] },
         { name: "鱼料", subs: ["标准"] }, { name: "配料", subs: ["标准"] },
-        { name: "蒜段", subs: ["标准"] }, { name: "蕃薯", subs: ["标准"] },
-        { name: "白萝卜", subs: ["标准"] }
+        { name: "蒜段", subs: ["标准"] }, { name: "蕃薯", subs: ["标准"], canSteamBottom: true }, { name: "白萝卜", subs: ["标准"] }
       ]
     }
   ];
@@ -551,26 +554,37 @@
           let extraSelectHtml = '';
           if (item.hasCutStyle) {
             extraSelectHtml = `
-              <select class="menu-sub-select m-cut" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="checkChickenAndFishLink()" style="background:#fef3c7; color:#b45309;">
+              <select class="menu-sub-select m-cut" data-cidx="${cIdx}" data-iidx="${iIdx}" style="background:#fef3c7; color:#b45309;">
                 <option value="起片">起片</option>
                 <option value="斩件">斩件</option>
               </select>
             `;
           }
 
-          let fishAttr = item.isFish ? `data-is-fish="1"` : '';
+          let steamBottomOptions = '';
+          if (item.canSteamBottom) {
+            steamBottomOptions = `
+              <select class="menu-sub-select m-stbot" data-cidx="${cIdx}" data-iidx="${iIdx}" style="background:#dcfce7; color:#15803d;">
+                <option value="普通">标准做法</option>
+                <option value="鸡底蒸">【鸡底蒸】</option>
+                <option value="鱼底蒸">【鱼底蒸】</option>
+                <option value="鸡/鱼底双拼">【鸡/鱼底双拼】</option>
+              </select>
+            `;
+          }
 
           menuHtml += `
-            <div class="menu-item-row" ${fishAttr}>
+            <div class="menu-item-row">
               <span class="menu-item-name">
                 <input type="checkbox" class="m-chk" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="toggleMenuRow(${cIdx}, ${iIdx})">
                 ${item.name}
               </span>
               <div id="m_controls_${cIdx}_${iIdx}" style="display:none; align-items:center;">
                 ${extraSelectHtml}
-                <select class="menu-sub-select m-sub" data-cidx="${cIdx}" data-iidx="${iIdx}" onchange="checkChickenAndFishLink()">${subOptions}</select>
+                ${steamBottomOptions}
+                <select class="menu-sub-select m-sub" data-cidx="${cIdx}" data-iidx="${iIdx}">${subOptions}</select>
                 <input type="number" class="menu-qty-input m-qty" data-cidx="${cIdx}" data-iidx="${iIdx}" value="1" min="1">
-                <button type="button" onclick="addSameMenu(${cIdx}, ${iIdx})" style="background:#e5e7eb; border:none; padding:6px 10px; border-radius:6px; font-size:13px; font-weight:bold; margin-left:6px; cursor:pointer;" title="点两份同菜不同做法">+同款</button>
+                <button type="button" onclick="addSameMenu(${cIdx}, ${iIdx})" style="background:#e5e7eb; border:none; padding:7px 10px; border-radius:6px; font-size:14px; font-weight:bold; margin-left:6px; cursor:pointer;" title="点两份同菜不同做法">+同款</button>
               </div>
             </div>
             <div id="extra_rows_${cIdx}_${iIdx}"></div>
@@ -596,14 +610,14 @@
           <input class="input" id="inputTime" value="${t.time || defaultTime}">
         </div>
         <div class="form-item">
-          <label class="label">本桌预点菜品 (独立设置本桌菜单)</label>
+          <label class="label">本桌预点菜品 (可多选、加同款、设底蒸拼配)</label>
           <div class="menu-selector-box">${menuHtml}</div>
         </div>
         <div class="form-item" style="margin-top:8px;">
           <label class="label">其他特殊备注</label>
           <input class="input" id="inputNote" placeholder="如: 跨桌预定、靠窗等" value="${t.note || ''}">
         </div>
-        <button class="action-btn btn-primary" onclick="saveBooking()">保存本桌预定信息</button>
+        <button class="action-btn btn-primary" onclick="showBookingPreview()">下一步：预览总汇并完成预定</button>
       `;
       return;
     }
@@ -656,10 +670,7 @@
       controls.style.display = 'none';
       document.getElementById(`extra_rows_${cIdx}_${iIdx}`).innerHTML = '';
     }
-    checkChickenAndFishLink();
   }
-
-  function checkChickenAndFishLink() {}
 
   function addSameMenu(cIdx, iIdx) {
     const item = MENU_CATEGORIES[cIdx].items[iIdx];
@@ -676,57 +687,34 @@
       `;
     }
 
+    let extraSteamBottomHtml = '';
+    if (item.canSteamBottom) {
+      extraSteamBottomHtml = `
+        <select class="menu-sub-select extra-stbot" style="background:#dcfce7; color:#15803d;">
+          <option value="普通">标准做法</option>
+          <option value="鸡底蒸">【鸡底蒸】</option>
+          <option value="鱼底蒸">【鱼底蒸】</option>
+          <option value="鸡/鱼底双拼">【鸡/鱼底双拼】</option>
+        </select>
+      `;
+    }
+
     const div = document.createElement('div');
-    div.style.cssText = "display:flex; justify-content:flex-end; align-items:center; margin-top:6px;";
+    div.style.cssText = "display:flex; justify-content:flex-end; align-items:center; margin-top:8px;";
     div.innerHTML = `
-      <span style="font-size:13px; color:#6b7280; margin-right:6px; font-weight:bold;">[另加]</span>
+      <span style="font-size:13px; color:#6b7280; margin-right:6px; font-weight:bold;">[另加同款]</span>
       ${extraCutHtml}
+      ${extraSteamBottomHtml}
       <select class="menu-sub-select extra-sub" data-cidx="${cIdx}" data-iidx="${iIdx}">${subOptions}</select>
       <input type="number" class="menu-qty-input extra-qty" data-cidx="${cIdx}" data-iidx="${iIdx}" value="1" min="1">
-      <button type="button" onclick="this.parentElement.remove();" style="background:#fee2e2; color:#dc2626; border:none; padding:6px 10px; border-radius:6px; font-size:13px; font-weight:bold; margin-left:6px; cursor:pointer;">删除</button>
+      <button type="button" onclick="this.parentElement.remove();" style="background:#fee2e2; color:#dc2626; border:none; padding:7px 10px; border-radius:6px; font-size:14px; font-weight:bold; margin-left:6px; cursor:pointer;">删除</button>
     `;
     extraContainer.appendChild(div);
   }
 
-  async function saveBooking() {
-    const guest = document.getElementById('inputGuest').value.trim();
-    if (!guest) {
-      alert('请填写预订人姓名或备注');
-      return;
-    }
-
-    let chickenIsQiPian = false;
-    let hasChicken = false;
-    let hasFish = false;
-
-    document.querySelectorAll('.m-chk:checked').forEach(chk => {
-      const cIdx = chk.dataset.cidx;
-      const iIdx = chk.dataset.iidx;
-      const item = MENU_CATEGORIES[cIdx].items[iIdx];
-      if (item.name === "隔水桑拿鸡") {
-        hasChicken = true;
-        const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
-        if (cutSel && cutSel.value === "起片") {
-          chickenIsQiPian = true;
-        }
-      }
-    });
-
-    document.querySelectorAll('.extra-cut').forEach(sel => {
-      if (sel.value === "起片") {
-        chickenIsQiPian = true;
-        hasChicken = true;
-      }
-    });
-
-    document.querySelectorAll('.m-chk:checked').forEach(chk => {
-      const row = chk.closest('.menu-item-row');
-      if (row && row.dataset.isFish === "1") {
-        hasFish = true;
-      }
-    });
-
+  function collectMenuData() {
     let selectedMenus = [];
+
     document.querySelectorAll('.m-chk:checked').forEach(chk => {
       const cIdx = chk.dataset.cidx;
       const iIdx = chk.dataset.iidx;
@@ -737,33 +725,72 @@
       let prefix = "";
       if (item.hasCutStyle) {
         const cutSel = document.querySelector(`.m-cut[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
-        prefix = cutSel ? `[${cutSel.value}] ` : "";
+        if (cutSel) prefix += `[${cutSel.value}] `;
+      }
+      if (item.canSteamBottom) {
+        const stbotSel = document.querySelector(`.m-stbot[data-cidx='${cIdx}'][data-iidx='${iIdx}']`);
+        if (stbotSel && stbotSel.value !== "普通") prefix += `[${stbotSel.value}] `;
       }
       
-      if (item.isFish && hasChicken && chickenIsQiPian) {
-        selectedMenus.push(`${prefix}${item.name}(${sub} - 全蒸) x${qty}`);
-      } else {
-        selectedMenus.push(`${prefix}${item.name}(${sub}) x${qty}`);
-      }
+      selectedMenus.push(`${prefix}${item.name}(${sub}) x${qty}`);
     });
 
     document.querySelectorAll('.extra-sub').forEach(sel => {
-      const cIdx = sel.dataset.cidx;
-      const iIdx = sel.dataset.iidx;
-      const item = MENU_CATEGORIES[cIdx].items[iIdx];
       const sub = sel.value;
       const qty = sel.parentElement.querySelector('.extra-qty').value || '1';
       
+      let prefix = "";
       let extraCut = sel.parentElement.querySelector('.extra-cut');
-      let prefix = extraCut ? `[${extraCut.value}] ` : "";
+      if (extraCut) prefix += `[${extraCut.value}] `;
+      let extraStBot = sel.parentElement.querySelector('.extra-stbot');
+      if (extraStBot && extraStBot.value !== "普通") prefix += `[${extraStBot.value}] `;
 
-      if (item.isFish && hasChicken && chickenIsQiPian) {
-        selectedMenus.push(`${prefix}${item.name}(${sub} - 全蒸) x${qty}`);
-      } else {
-        selectedMenus.push(`${prefix}${item.name}(${sub}) x${qty}`);
-      }
+      // 获取菜名
+      const cIdx = sel.dataset.cidx;
+      const iIdx = sel.dataset.iidx;
+      const item = MENU_CATEGORIES[cIdx].items[iIdx];
+
+      selectedMenus.push(`${prefix}${item.name}(${sub}) x${qty}`);
     });
 
+    return selectedMenus;
+  }
+
+  function showBookingPreview() {
+    const guest = document.getElementById('inputGuest').value.trim();
+    if (!guest) {
+      alert('请填写预订人姓名或备注');
+      return;
+    }
+
+    const pcount = document.getElementById('inputPCount').value.trim();
+    const phone = document.getElementById('inputPhone').value.trim();
+    const time = document.getElementById('inputTime').value.trim();
+    const note = document.getElementById('inputNote').value.trim();
+    const menus = collectMenuData();
+
+    const body = document.getElementById('modalBody');
+    body.innerHTML = `
+      <div style="font-size:16px; font-weight:bold; color:#2563eb; margin-bottom:10px;">📋 预约信息简约总汇核对</div>
+      <div class="preview-box">
+        <div><b>桌位：</b>${currentActiveTable.id} (${currentActiveTable.cap})</div>
+        <div><b>姓名：</b>${guest} ${pcount ? '(' + pcount + '人)' : ''}</div>
+        <div><b>电话：</b>${phone || '未填写'}</div>
+        <div><b>时间：</b>${time}</div>
+        <div><b>预点菜单：</b><br>${menus.length > 0 ? menus.join('<br>') : '无预点菜品'}</div>
+        <div><b>其他备注：</b>${note || '无'}</div>
+      </div>
+      <div style="font-size:13px; color:#6b7280; margin-bottom:15px; text-align:center;">请仔细检查以上信息，确认无误后点击下方按钮完成预定。</div>
+      <div class="btn-group">
+        <button class="action-btn btn-success" onclick="saveBooking()">确认无误，完成预定</button>
+        <button class="action-btn" style="background:#e5e7eb; color:#4b5563;" onclick="renderModalBody(true)">返回重新修改</button>
+      </div>
+    `;
+  }
+
+  async function saveBooking() {
+    const guest = document.getElementById('inputGuest').value.trim();
+    const selectedMenus = collectMenuData();
     const menuStr = selectedMenus.length > 0 ? selectedMenus.join('\n') : '';
 
     delete reservationMap[currentActiveTable.id].lock;
