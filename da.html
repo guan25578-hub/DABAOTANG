@@ -16,11 +16,14 @@
         .meal-btn { border: none; padding: 6px 14px; font-size: 13px; border-radius: 6px; cursor: pointer; background: transparent; color: #4b5563; }
         .meal-btn.active { background: #1f2937; color: #fff; font-weight: bold; }
 
-        /* 全局搜索栏组件 */
-        .search-container { position: relative; margin-bottom: 12px; }
+        /* 全局搜索栏组件（带范围选择器） */
+        .search-container { margin-bottom: 12px; }
+        .search-box-flex { display: flex; gap: 8px; align-items: center; }
+        .search-input-wrap { position: relative; flex: 1; }
         .search-input { width: 100%; background: #fff; border: 1.5px solid #d1d5db; border-radius: 12px; padding: 10px 36px 10px 14px; font-size: 14px; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: border-color 0.2s; }
         .search-input:focus { border-color: #2563eb; }
         .clear-search-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); border: none; background: #e5e7eb; color: #4b5563; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .search-scope-select { font-size: 12px; font-weight: bold; padding: 10px 8px; border-radius: 12px; border: 1.5px solid #d1d5db; background: #fff; color: #374151; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.03); cursor: pointer; }
 
         /* 云端同步指示灯与高效率工具栏 */
         .sync-status { font-size: 11px; color: #6b7280; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
@@ -69,6 +72,10 @@
 
         /* 全店汇总版面样式 */
         .summary-wrapper { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 12px; }
+        .summary-sub-toggle-bar { display: flex; background: #e2e8f0; border-radius: 10px; padding: 3px; gap: 4px; }
+        .summary-sub-btn { flex: 1; border: none; padding: 8px 10px; font-size: 13px; font-weight: bold; border-radius: 8px; cursor: pointer; background: transparent; color: #4b5563; transition: all 0.2s; text-align: center; }
+        .summary-sub-btn.active { background: #2563eb; color: #fff; box-shadow: 0 2px 4px rgba(37,99,235,0.2); }
+
         .summary-stats-bar { background: #fff; border-radius: 12px; padding: 14px 16px; box-shadow: 0 2px 6px rgba(0,0,0,0.04); display: flex; justify-content: space-around; align-items: center; text-align: center; }
         .stat-item .num { font-size: 20px; font-weight: bold; color: #2563eb; }
         .stat-item .label { font-size: 12px; color: #6b7280; margin-top: 2px; }
@@ -143,10 +150,18 @@
     </div>
   </div>
 
-  <!-- 全局搜索栏（仅搜索当餐预订） -->
+  <!-- 全局搜索栏（支持搜索当前餐次或全店所有订单） -->
   <div class="search-container">
-    <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索当餐客人姓名或电话号码..." oninput="onSearchInput()">
-    <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">✕</button>
+    <div class="search-box-flex">
+      <div class="search-input-wrap">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 搜索客人姓名或电话号码..." oninput="onSearchInput()">
+        <button class="clear-search-btn" id="clearSearchBtn" onclick="clearSearch()" style="display:none;">✕</button>
+      </div>
+      <select id="searchScope" class="search-scope-select" onchange="renderGrid()">
+        <option value="current">📍 仅当前餐次</option>
+        <option value="all">🌐 搜所有订单</option>
+      </select>
+    </div>
   </div>
 
   <!-- 云端同步指示灯与高效率工具栏 -->
@@ -302,6 +317,7 @@
   let currentActiveTable = null;
   let syncTimer = null;
   let lastInteractTime = Date.now();
+  let summarySubMode = 'current'; // 'current' 选定当餐汇总，'all' 全店所有订单汇总
 
   window.onload = function() {
     document.getElementById('datePicker').value = selectedDate;
@@ -396,7 +412,7 @@
     renderGrid();
   }
 
-  // 严格仅清理7天之前的历史垃圾数据，绝不删除当前及未来订单
+  // 仅清理7天之前的历史垃圾数据，绝不删除当前及未来订单
   function cleanOldData() {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -480,6 +496,11 @@
     renderGrid();
   }
 
+  function switchSummarySubMode(mode) {
+    summarySubMode = mode;
+    renderGrid();
+  }
+
   function getOtherTablesForGuest(rec, currentTableId) {
     if (!rec || !rec.guest || !rec.guest.trim()) return [];
     const currentGuest = rec.guest.trim();
@@ -543,6 +564,7 @@
     const grid = document.getElementById('tableGrid');
     const legendBar = document.getElementById('legendBar');
     const keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+    const searchScope = document.getElementById('searchScope') ? document.getElementById('searchScope').value : 'current';
 
     if (currentZoneIndex === 'summary' && keyword === '') {
       legendBar.style.display = 'none';
@@ -554,32 +576,84 @@
 
     if (keyword !== '') {
       let matchedTables = [];
-      ZONES.forEach(zone => {
-        zone.tables.forEach(t => {
-          const rec = reservationMap[t.id] || { status: 'free' };
-          if (rec.status !== 'free') {
-            if ((rec.guest && rec.guest.toLowerCase().includes(keyword)) || (rec.phone && rec.phone.toLowerCase().includes(keyword))) {
-              matchedTables.push({ ...t, zoneName: zone.name, rec });
+
+      if (searchScope === 'all') {
+        // 全局穿透搜索所有日期的订单
+        Object.keys(globalAllData).forEach(key => {
+          if (key.startsWith('RES_')) {
+            const parts = key.split('_');
+            if (parts.length >= 3) {
+              const resDate = parts[1];
+              const resMeal = parts[2];
+              const resMap = globalAllData[key] || {};
+
+              Object.keys(resMap).forEach(tId => {
+                const rec = resMap[tId];
+                if (rec && rec.status !== 'free') {
+                  if ((rec.guest && rec.guest.toLowerCase().includes(keyword)) || (rec.phone && rec.phone.toLowerCase().includes(keyword))) {
+                    matchedTables.push({
+                      id: tId,
+                      cap: getCap(tId),
+                      zoneName: getZoneNameByTableId(tId),
+                      resDate,
+                      resMeal,
+                      mealLabel: resMeal === 'lunch' ? '🌞 午市' : '🌙 晚市',
+                      rec
+                    });
+                  }
+                }
+              });
             }
           }
         });
-      });
 
-      if (matchedTables.length === 0) {
-        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">🔍 未搜索到当前餐次的相关预订</div>`;
+        if (matchedTables.length === 0) {
+          grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">🔍 全店未搜索到相关预订订单</div>`;
+          return;
+        }
+
+        grid.innerHTML = matchedTables.map(item => `
+          <div class="table-card status-${item.rec.status}" onclick="openSummaryTableModal('${item.resDate}', '${item.resMeal}', '${item.id}', '${item.cap}')">
+            <div class="card-header">
+              <div>
+                <span class="table-name">${item.id}</span>
+                <div><span class="search-zone-badge">${item.resDate} ${item.mealLabel}</span></div>
+              </div>
+              <span class="table-cap">${item.cap}</span>
+            </div>
+            <div class="card-body">${getCardBodyHtml(item.rec, item.id)}</div>
+          </div>
+        `).join('');
+        return;
+      } else {
+        // 仅搜索当前餐次预订
+        ZONES.forEach(zone => {
+          zone.tables.forEach(t => {
+            const rec = reservationMap[t.id] || { status: 'free' };
+            if (rec.status !== 'free') {
+              if ((rec.guest && rec.guest.toLowerCase().includes(keyword)) || (rec.phone && rec.phone.toLowerCase().includes(keyword))) {
+                matchedTables.push({ ...t, zoneName: zone.name, rec });
+              }
+            }
+          });
+        });
+
+        if (matchedTables.length === 0) {
+          grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 35px 0; color: #9ca3af; font-size: 14px;">🔍 未搜索到当前餐次的相关预订</div>`;
+          return;
+        }
+
+        grid.innerHTML = matchedTables.map(item => `
+          <div class="table-card status-${item.rec.status}" onclick="tryOpenTableModal('${item.id}', '${item.cap}')">
+            <div class="card-header">
+              <div><span class="table-name">${item.id}</span><div><span class="search-zone-badge">${item.zoneName}</span></div></div>
+              <span class="table-cap">${item.cap}</span>
+            </div>
+            <div class="card-body">${getCardBodyHtml(item.rec, item.id)}</div>
+          </div>
+        `).join('');
         return;
       }
-
-      grid.innerHTML = matchedTables.map(item => `
-        <div class="table-card status-${item.rec.status}" onclick="tryOpenTableModal('${item.id}', '${item.cap}')">
-          <div class="card-header">
-            <div><span class="table-name">${item.id}</span><div><span class="search-zone-badge">${item.zoneName}</span></div></div>
-            <span class="table-cap">${item.cap}</span>
-          </div>
-          <div class="card-body">${getCardBodyHtml(item.rec, item.id)}</div>
-        </div>
-      `).join('');
-      return;
     }
 
     const tables = ZONES[currentZoneIndex].tables;
@@ -594,7 +668,7 @@
     }).join('');
   }
 
-  // 快捷从全店汇总看板直接跳转至任意日期餐次的桌位查看/修改
+  // 从汇总跳转并打开指定日期餐次的桌台详情
   function openSummaryTableModal(resDate, resMeal, tableId, tableCap) {
     selectedDate = resDate;
     currentMeal = resMeal;
@@ -605,79 +679,127 @@
     tryOpenTableModal(tableId, tableCap);
   }
 
-  // 渲染全店全日期所有预订/就餐订单汇总看板
+  // 渲染汇总看板（含双子模块：当餐汇总 vs 全店所有订单汇总）
   function renderSummaryBoard(container) {
-    let allBookedTables = [];
+    let bookedTables = [];
     let totalReserved = 0;
     let totalOccupied = 0;
     let dishSummaryMap = {};
 
-    // 扫描系统中的所有日期和餐次 key
-    Object.keys(globalAllData).forEach(key => {
-      if (key.startsWith('RES_')) {
-        const parts = key.split('_');
-        if (parts.length >= 3) {
-          const resDate = parts[1];
-          const resMeal = parts[2];
-          const resMap = globalAllData[key] || {};
+    const mealName = currentMeal === 'lunch' ? '🌞 午市' : '🌙 晚市';
 
-          Object.keys(resMap).forEach(tId => {
-            let rec = resMap[tId];
-            if (rec && rec.status !== 'free') {
-              let cap = getCap(tId);
-              let zoneName = getZoneNameByTableId(tId);
-              allBookedTables.push({
-                id: tId,
-                cap,
-                zoneName,
-                resDate,
-                resMeal,
-                mealLabel: resMeal === 'lunch' ? '🌞 午市' : '🌙 晚市',
-                ...rec
-              });
-
-              if (rec.status === 'reserved') totalReserved++;
-              if (rec.status === 'occupied') totalOccupied++;
-
-              if (rec.menu && rec.menu.trim()) {
-                let lines = rec.menu.split('\n');
-                lines.forEach(line => {
-                  let trimmed = line.trim();
-                  if (!trimmed) return;
-                  
-                  let match = trimmed.match(/^(.*?)\s*[xX×]\s*(\d+)$/);
-                  if (match) {
-                    let dishName = match[1].trim();
-                    let qty = parseInt(match[2], 10) || 1;
-                    dishSummaryMap[dishName] = (dishSummaryMap[dishName] || 0) + qty;
-                  } else {
-                    dishSummaryMap[trimmed] = (dishSummaryMap[trimmed] || 0) + 1;
-                  }
-                });
-              }
-            }
+    if (summarySubMode === 'current') {
+      // 模块 1：所选日期的当餐汇总
+      Object.keys(reservationMap).forEach(tId => {
+        let rec = reservationMap[tId];
+        if (rec && rec.status !== 'free') {
+          let cap = getCap(tId);
+          let zoneName = getZoneNameByTableId(tId);
+          bookedTables.push({
+            id: tId,
+            cap,
+            zoneName,
+            resDate: selectedDate,
+            resMeal: currentMeal,
+            mealLabel: mealName,
+            ...rec
           });
+
+          if (rec.status === 'reserved') totalReserved++;
+          if (rec.status === 'occupied') totalOccupied++;
+
+          if (rec.menu && rec.menu.trim()) {
+            let lines = rec.menu.split('\n');
+            lines.forEach(line => {
+              let trimmed = line.trim();
+              if (!trimmed) return;
+              
+              let match = trimmed.match(/^(.*?)\s*[xX×]\s*(\d+)$/);
+              if (match) {
+                let dishName = match[1].trim();
+                let qty = parseInt(match[2], 10) || 1;
+                dishSummaryMap[dishName] = (dishSummaryMap[dishName] || 0) + qty;
+              } else {
+                dishSummaryMap[trimmed] = (dishSummaryMap[trimmed] || 0) + 1;
+              }
+            });
+          }
         }
-      }
-    });
+      });
+      bookedTables.sort((a, b) => a.id.localeCompare(b.id, 'zh-CN', { numeric: true }));
+    } else {
+      // 模块 2：全店所有订单汇总（所有日期与餐次）
+      Object.keys(globalAllData).forEach(key => {
+        if (key.startsWith('RES_')) {
+          const parts = key.split('_');
+          if (parts.length >= 3) {
+            const resDate = parts[1];
+            const resMeal = parts[2];
+            const resMap = globalAllData[key] || {};
 
-    // 依日期升序 -> 餐次(午市在先) -> 桌号排序
-    allBookedTables.sort((a, b) => {
-      if (a.resDate !== b.resDate) {
-        return a.resDate.localeCompare(b.resDate);
-      }
-      if (a.resMeal !== b.resMeal) {
-        return a.resMeal === 'lunch' ? -1 : 1;
-      }
-      return a.id.localeCompare(b.id, 'zh-CN', { numeric: true });
-    });
+            Object.keys(resMap).forEach(tId => {
+              let rec = resMap[tId];
+              if (rec && rec.status !== 'free') {
+                let cap = getCap(tId);
+                let zoneName = getZoneNameByTableId(tId);
+                bookedTables.push({
+                  id: tId,
+                  cap,
+                  zoneName,
+                  resDate,
+                  resMeal,
+                  mealLabel: resMeal === 'lunch' ? '🌞 午市' : '🌙 晚市',
+                  ...rec
+                });
 
+                if (rec.status === 'reserved') totalReserved++;
+                if (rec.status === 'occupied') totalOccupied++;
+
+                if (rec.menu && rec.menu.trim()) {
+                  let lines = rec.menu.split('\n');
+                  lines.forEach(line => {
+                    let trimmed = line.trim();
+                    if (!trimmed) return;
+                    
+                    let match = trimmed.match(/^(.*?)\s*[xX×]\s*(\d+)$/);
+                    if (match) {
+                      let dishName = match[1].trim();
+                      let qty = parseInt(match[2], 10) || 1;
+                      dishSummaryMap[dishName] = (dishSummaryMap[dishName] || 0) + qty;
+                    } else {
+                      dishSummaryMap[trimmed] = (dishSummaryMap[trimmed] || 0) + 1;
+                    }
+                  });
+                }
+              }
+            });
+          }
+        }
+      });
+
+      bookedTables.sort((a, b) => {
+        if (a.resDate !== b.resDate) return a.resDate.localeCompare(b.resDate);
+        if (a.resMeal !== b.resMeal) return a.resMeal === 'lunch' ? -1 : 1;
+        return a.id.localeCompare(b.id, 'zh-CN', { numeric: true });
+      });
+    }
+
+    // 结构 HTML 渲染
     let html = `
       <div class="summary-wrapper">
+        <div class="summary-sub-toggle-bar">
+          <button class="summary-sub-btn ${summarySubMode === 'current' ? 'active' : ''}" onclick="switchSummarySubMode('current')">
+            📍 当餐汇总 (${selectedDate} ${mealName})
+          </button>
+          <button class="summary-sub-btn ${summarySubMode === 'all' ? 'active' : ''}" onclick="switchSummarySubMode('all')">
+            🌐 全店所有订单汇总
+          </button>
+        </div>
+
         <div class="summary-stats-bar">
           <div class="stat-item">
-            <div class="num">${allBookedTables.length} 桌</div>
-            <div class="label">全店总预订/就餐桌数</div>
+            <div class="num">${bookedTables.length} 桌</div>
+            <div class="label">${summarySubMode === 'current' ? '当餐预订/就餐数' : '全店总预订/就餐桌数'}</div>
           </div>
           <div class="stat-item">
             <div class="num" style="color:#d97706;">${totalReserved} 桌</div>
@@ -701,7 +823,9 @@
 
       html += `
         <div class="summary-dish-card">
-          <div class="summary-dish-title">🍲 全店预点菜品总汇统计</div>
+          <div class="summary-dish-title">
+            🍲 ${summarySubMode === 'current' ? `${selectedDate}${mealName} 预点菜品` : '全店所有预点菜品总汇统计'}
+          </div>
           <div class="summary-dish-grid">
             ${dishItemsHtml}
           </div>
@@ -710,25 +834,29 @@
     } else {
       html += `
         <div class="summary-dish-card" style="color:#9ca3af; text-align:center; font-size:13px;">
-          🍲 当前暂无任何预点菜品统计
+          🍲 暂无预点菜品统计
         </div>
       `;
     }
 
-    if (allBookedTables.length === 0) {
+    if (bookedTables.length === 0) {
       html += `
         <div style="text-align: center; padding: 40px 0; background: #fff; border-radius: 12px; color: #9ca3af;">
-          🎉 暂无任何日期的预订或用餐桌位
+          🎉 ${summarySubMode === 'current' ? `${selectedDate}${mealName} 暂无任何预订或用餐桌位` : '全店暂无任何日期的预订或用餐桌位'}
         </div>
       </div>`;
       container.innerHTML = html;
       return;
     }
 
-    allBookedTables.forEach(t => {
+    bookedTables.forEach(t => {
       let statusTag = t.status === 'occupied' ? 
         `<span class="summary-tag status-occupied">🔥 就餐中</span>` : 
         `<span class="summary-tag status-reserved">⏰ 已预留</span>`;
+
+      let otherTables = getOtherTablesForGuest(t, t.id);
+      let linkedHtml = otherTables.length > 0 ? 
+        `<div style="color:#d97706; font-weight:bold; grid-column:1/-1;">🔗 关联同一客人当餐其他桌位: ${otherTables.join('、')}</div>` : '';
 
       html += `
         <div class="summary-card" onclick="openSummaryTableModal('${t.resDate}', '${t.resMeal}', '${t.id}', '${t.cap}')">
@@ -747,6 +875,7 @@
             <div><b>预留电话：</b>${t.phone ? `<a href="tel:${t.phone}" onclick="event.stopPropagation();" style="color:#2563eb; text-decoration:underline;">${t.phone}</a>` : '未填写'}</div>
             <div><b>到店/入座：</b>${t.seatedTime ? '入座 ' + t.seatedTime : (t.time || '未指定')}</div>
             <div><b>备注说明：</b>${t.note || '无'}</div>
+            ${linkedHtml}
           </div>
           <div class="summary-menu-box">
             <b>🍲 本桌预点菜单：</b><br>${t.menu ? t.menu : '无预点菜品'}
@@ -773,7 +902,6 @@
     document.getElementById('modalMask').classList.remove('hidden');
   }
 
-  // 将旧文本格式的菜单反解析为结构化数据
   function parseMenuTextToObjects(menuStr) {
     if (!menuStr || !menuStr.trim()) return [];
     let list = [];
